@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { ExampleMongodbDocListComponent } from './components/example-mongodb-doc-list.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'ngx-seed-mfe',
-  imports: [MatButtonModule, ExampleMongodbDocListComponent],
+  imports: [RouterOutlet],
   template: `
-    <ngx-example-mongodb-doc-list></ngx-example-mongodb-doc-list>
+    <main class="shell">
+      <router-outlet></router-outlet>
+    </main>
   `,
   styles: [``],
 })
