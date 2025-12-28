@@ -7,171 +7,91 @@ import {
   signal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import {
   MatSnackBar,
   MatSnackBarModule,
 } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contracts';
 import { of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import { AssessmentTestsApiService } from '../services/assessment-tests-api.service';
-import { AssessmentTestCardComponent } from './assessment-test-card.component';
+import { AssessmentTestListAccordionComponent } from './assessment-test-list-accordion.component';
+import { AssessmentTestListEmptyStateComponent } from './assessment-test-list-empty-state.component';
+import { AssessmentTestListFiltersComponent } from './assessment-test-list-filters.component';
+import { AssessmentTestListSummaryComponent } from './assessment-test-list-summary.component';
 
 @Component({
   selector: 'ngx-assessment-test-list',
-  standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatIconModule,
-    MatSnackBarModule,
     MatProgressBarModule,
-    MatTooltipModule,
-    AssessmentTestCardComponent,
+    MatSnackBarModule,
+    MatIconModule,
+    MatButtonModule,
+    AssessmentTestListFiltersComponent,
+    AssessmentTestListSummaryComponent,
+    AssessmentTestListAccordionComponent,
+    AssessmentTestListEmptyStateComponent,
   ],
   template: `
-    <div class="hero">
-      <div>
-        <p class="eyebrow">Assessments</p>
-        <h1>Assessment Tests</h1>
-        <p class="lede">
-          Build, edit, and manage Angular, NestJS, and RxJS assessment
-          tests.
-        </p>
-      </div>
-      <div class="hero-actions">
-        <button
-          mat-flat-button
-          color="primary"
-          (click)="openCreate()"
-        >
-          <mat-icon>add</mat-icon>
-          New test
-        </button>
-        <button mat-stroked-button type="button" (click)="reload()">
-          <mat-icon>refresh</mat-icon>
-          Refresh
-        </button>
-      </div>
-    </div>
+    <div class="layout">
+      <ngx-assessment-test-list-filters
+        [query]="query()"
+        [subjectFilter]="subjectFilter()"
+        [levelCap]="levelCap()"
+        [sort]="sort()"
+        (queryChange)="query.set($event)"
+        (subjectFilterChange)="subjectFilter.set($event)"
+        (levelCapChange)="onLevelCapChange($event)"
+        (sortChange)="sort.set($event)"
+        (clear)="clearFilters()"
+      ></ngx-assessment-test-list-filters>
 
-    <div class="controls">
-      <mat-form-field appearance="outline" class="search">
-        <mat-label>Search</mat-label>
-        <input
-          matInput
-          placeholder="Filter by name or subject"
-          [value]="query()"
-          (input)="query.set($any($event.target).value)"
-        />
-        @if(query()) {
-        <button
-          mat-icon-button
-          matSuffix
-          (click)="query.set('')"
-          aria-label="Clear"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
-        }
-      </mat-form-field>
-    </div>
+      @if (loading()) {
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
 
-    @if (loading()) {
-    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-    }
+      <ngx-assessment-test-list-summary
+        [filteredCount]="filtered().length"
+        [totalCount]="tests().length"
+        [subjectFilter]="subjectFilter()"
+        [levelCap]="levelCap()"
+      ></ngx-assessment-test-list-summary>
 
-    <div class="grid">
-      @for (t of filtered(); track t._id) {
-      <ngx-assessment-test-card
-        [test]="t"
+      <ngx-assessment-test-list-accordion
+        [tests]="filtered()"
         (edit)="openEdit($event)"
-        (remove)="confirmDelete($event)"
-      ></ngx-assessment-test-card>
+        (delete)="confirmDelete($event)"
+      ></ngx-assessment-test-list-accordion>
+
+      @if (!loading() && filtered().length === 0) {
+      <ngx-assessment-test-list-empty-state
+        (create)="openCreate()"
+      ></ngx-assessment-test-list-empty-state>
       }
     </div>
 
-    @if (!loading() && filtered().length === 0) {
-    <div class="empty">
-      <mat-icon>inbox</mat-icon>
-      <p>No assessment tests match your filter.</p>
-      <button mat-flat-button color="primary" (click)="openCreate()">
-        <mat-icon>add</mat-icon>
-        Add your first test
-      </button>
-    </div>
-    }
+    <button matFab class="add-fab" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+    </button>
   `,
   styles: [
     `
-      .hero {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        align-items: flex-start;
-        padding: 1.5rem 0 0.5rem;
+      :host {
+        display: block;
       }
-      .hero h1 {
-        margin: 0.25rem 0;
-        font-size: 2rem;
-      }
-      .hero .lede {
-        margin: 0;
-        opacity: 0.8;
-        max-width: 640px;
-      }
-      .hero-actions {
-        display: flex;
-        gap: 0.5rem;
-      }
-      .controls {
-        display: flex;
-        justify-content: flex-start;
-        padding: 0.5rem 0 1rem;
-      }
-      .search {
-        width: min(520px, 100%);
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1rem;
-      }
-      .empty {
+      .layout {
         display: grid;
         gap: 0.75rem;
-        justify-items: center;
-        padding: 2rem 0;
-        opacity: 0.75;
       }
-      .empty mat-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
-      }
-      .eyebrow {
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: 0.78rem;
-        margin: 0;
-        color: var(--mat-sys-secondary);
-      }
-      @media (max-width: 720px) {
-        .hero {
-          flex-direction: column;
-        }
-        .hero-actions {
-          width: 100%;
-          justify-content: flex-start;
-        }
+      button[matFab] {
+        position: fixed;
+        bottom: 48px;
+        right: 20px;
+        z-index: 1000;
       }
     `,
   ],
@@ -186,14 +106,36 @@ export class AssessmentTestListComponent {
   readonly tests = signal<AssessmentTestDto[]>([]);
   readonly loading = signal(false);
   readonly query = signal('');
+  readonly subjectFilter = signal<
+    AssessmentTestDto['subject'] | 'ALL'
+  >('ALL');
+  readonly levelCap = signal<number | null>(null);
+  readonly sort = signal<'updated' | 'name' | 'level'>('updated');
   readonly filtered = computed(() => {
     const q = this.query().toLowerCase().trim();
-    if (!q) return this.tests();
+    const subject = this.subjectFilter();
+    const levelCap = this.levelCap();
 
-    return this.tests().filter((t) => {
-      const haystack = [t.name, t.subject, String(t.level)].join(' ');
-      return haystack.toLowerCase().includes(q);
-    });
+    let rows = this.tests();
+
+    if (subject !== 'ALL') {
+      rows = rows.filter((t) => t.subject === subject);
+    }
+
+    if (levelCap !== null) {
+      rows = rows.filter((t) => t.level <= levelCap);
+    }
+
+    if (q) {
+      rows = rows.filter((t) => {
+        const haystack = [t.name, t.subject, String(t.level)].join(
+          ' '
+        );
+        return haystack.toLowerCase().includes(q);
+      });
+    }
+
+    return this.sortRows(rows);
   });
 
   constructor() {
@@ -219,6 +161,23 @@ export class AssessmentTestListComponent {
         finalize(() => this.loading.set(false))
       )
       .subscribe((rows) => this.tests.set(rows));
+  }
+
+  onLevelCapChange(value: number | null) {
+    if (value === null) {
+      this.levelCap.set(null);
+      return;
+    }
+    if (!Number.isNaN(value) && value > 0) {
+      this.levelCap.set(value);
+    }
+  }
+
+  clearFilters() {
+    this.query.set('');
+    this.subjectFilter.set('ALL');
+    this.levelCap.set(null);
+    this.sort.set('updated');
   }
 
   openCreate() {
@@ -258,5 +217,23 @@ export class AssessmentTestListComponent {
           duration: 2000,
         });
       });
+  }
+
+  private sortRows(rows: AssessmentTestDto[]): AssessmentTestDto[] {
+    const order = this.sort();
+
+    if (order === 'name') {
+      return [...rows].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    if (order === 'level') {
+      return [...rows].sort((a, b) => b.level - a.level);
+    }
+
+    return [...rows].sort(
+      (a, b) =>
+        new Date(b.lastUpdated).getTime() -
+        new Date(a.lastUpdated).getTime()
+    );
   }
 }

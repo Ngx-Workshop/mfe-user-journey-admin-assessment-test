@@ -19,7 +19,6 @@ import {
   MatSnackBar,
   MatSnackBarModule,
 } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import {
@@ -43,14 +42,13 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
     MatSelectModule,
     MatIconModule,
     MatDividerModule,
-    MatTooltipModule,
     MatProgressBarModule,
     MatSnackBarModule,
   ],
   template: `
     <section class="page">
       <header class="page-header">
-        <button mat-button type="button" (click)="goBack()">
+        <button mat-button (click)="goBack()">
           <mat-icon>arrow_back</mat-icon>
           Back
         </button>
@@ -68,17 +66,16 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
             your assessment.
           </p>
         </div>
-        <div class="progress" aria-hidden="true">
+        <div class="progress">
           <div class="dot" [class.active]="step() >= 0"></div>
           <div class="dot" [class.active]="step() >= 1"></div>
           <div class="dot" [class.active]="step() >= 2"></div>
         </div>
       </header>
 
-      <nav class="steps" aria-label="Wizard steps">
+      <nav class="steps">
         <button
           mat-stroked-button
-          type="button"
           [class.active]="step() === 0"
           (click)="setStep(0)"
         >
@@ -87,7 +84,6 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
         </button>
         <button
           mat-stroked-button
-          type="button"
           [class.active]="step() === 1"
           (click)="setStep(1)"
         >
@@ -96,7 +92,6 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
         </button>
         <button
           mat-stroked-button
-          type="button"
           [class.active]="step() === 2"
           (click)="setStep(2)"
         >
@@ -166,11 +161,7 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
         <mat-card-content class="questions">
           <div class="questions-head">
             <p class="hint">Min 1 question, min 2 choices each.</p>
-            <button
-              mat-stroked-button
-              type="button"
-              (click)="addQuestion()"
-            >
+            <button mat-stroked-button (click)="addQuestion()">
               <mat-icon>add</mat-icon>
               Add question
             </button>
@@ -185,11 +176,8 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
               </div>
               <button
                 mat-icon-button
-                type="button"
                 (click)="removeQuestion(i)"
                 [disabled]="questionControls().length <= 1"
-                matTooltip="Remove question"
-                aria-label="Remove question"
               >
                 <mat-icon>delete</mat-icon>
               </button>
@@ -211,12 +199,7 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
             <div formArrayName="choices" class="choices">
               <div class="choices-head">
                 <h4>Choices</h4>
-                <button
-                  mat-button
-                  type="button"
-                  (click)="addChoice(q)"
-                  matTooltip="Add choice"
-                >
+                <button mat-button (click)="addChoice(q)">
                   <mat-icon>add</mat-icon>
                   Add choice
                 </button>
@@ -230,9 +213,7 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
                 <button
                   mat-icon-button
                   matSuffix
-                  type="button"
                   (click)="removeChoice(q, ci)"
-                  aria-label="Remove choice"
                 >
                   <mat-icon>close</mat-icon>
                 </button>
@@ -328,7 +309,6 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
         <div class="footer-left">
           <button
             mat-stroked-button
-            type="button"
             (click)="prevStep()"
             [disabled]="step() === 0"
           >
@@ -340,7 +320,6 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
           <button
             mat-flat-button
             color="primary"
-            type="button"
             (click)="nextStep()"
           >
             Next
@@ -349,7 +328,6 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
           <button
             mat-flat-button
             color="primary"
-            type="button"
             [disabled]="form.invalid || saving()"
             (click)="submit()"
           >
