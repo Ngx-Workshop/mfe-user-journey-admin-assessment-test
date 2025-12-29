@@ -21,7 +21,6 @@ import { AssessmentTestsApiService } from '../../services/assessment-tests-api.s
 import { AssessmentTestListAccordionComponent } from './assessment-test-list-accordion.component';
 import { AssessmentTestListEmptyStateComponent } from './assessment-test-list-empty-state.component';
 import { AssessmentTestListFiltersComponent } from './assessment-test-list-filters.component';
-import { AssessmentTestListSummaryComponent } from './assessment-test-list-summary.component';
 
 @Component({
   selector: 'ngx-assessment-test-list',
@@ -32,7 +31,6 @@ import { AssessmentTestListSummaryComponent } from './assessment-test-list-summa
     MatIconModule,
     MatButtonModule,
     AssessmentTestListFiltersComponent,
-    AssessmentTestListSummaryComponent,
     AssessmentTestListAccordionComponent,
     AssessmentTestListEmptyStateComponent,
   ],
@@ -54,15 +52,12 @@ import { AssessmentTestListSummaryComponent } from './assessment-test-list-summa
       <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       }
 
-      <ngx-assessment-test-list-summary
+      <ngx-assessment-test-list-accordion
+        [tests]="filtered()"
         [filteredCount]="filtered().length"
         [totalCount]="tests().length"
         [subjectFilter]="subjectFilter()"
         [levelCap]="levelCap()"
-      ></ngx-assessment-test-list-summary>
-
-      <ngx-assessment-test-list-accordion
-        [tests]="filtered()"
         (edit)="openEdit($event)"
         (delete)="confirmDelete($event)"
       ></ngx-assessment-test-list-accordion>
