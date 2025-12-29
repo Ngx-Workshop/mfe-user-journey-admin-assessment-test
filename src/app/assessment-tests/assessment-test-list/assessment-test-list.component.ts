@@ -17,7 +17,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contracts';
 import { of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
-import { AssessmentTestsApiService } from '../services/assessment-tests-api.service';
+import { AssessmentTestsApiService } from '../../services/assessment-tests-api.service';
 import { AssessmentTestListAccordionComponent } from './assessment-test-list-accordion.component';
 import { AssessmentTestListEmptyStateComponent } from './assessment-test-list-empty-state.component';
 import { AssessmentTestListFiltersComponent } from './assessment-test-list-filters.component';

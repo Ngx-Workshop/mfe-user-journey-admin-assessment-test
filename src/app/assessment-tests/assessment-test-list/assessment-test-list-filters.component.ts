@@ -105,9 +105,12 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   styles: [
     `
       .filters {
-        background: var(--mat-sys-surface-variant);
+        background: var(--mat-sys-surface-container-low);
         padding: 1.5rem;
-        border-radius: 8px;
+        border-radius: var(
+          --mat-card-elevated-container-shape,
+          var(--mat-sys-corner-medium)
+        );
         margin-bottom: 2rem;
         h3 {
           margin-top: 0;
