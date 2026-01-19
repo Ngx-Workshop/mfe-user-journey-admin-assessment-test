@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from './header.component';
+import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
 
 @Component({
   selector: 'ngx-seed-mfe',
-  imports: [RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, NgxParticleHeader],
   template: `
-    <ngx-assessment-tests-header></ngx-assessment-tests-header>
+    <ngx-particle-header>
+      <h1>Assessment Tests</h1>
+    </ngx-particle-header>
     <div class="shell">
       <div class="container">
         <router-outlet></router-outlet>
@@ -23,6 +25,11 @@ import { HeaderComponent } from './header.component';
         padding: 1rem;
         flex: 0 1 clamp(480px, 70vw, 1400px);
         max-width: 100%;
+      }
+      h1 {
+        font-size: 1.85rem;
+        font-weight: 100;
+        margin: 1.7rem 1rem;
       }
     `,
   ],
