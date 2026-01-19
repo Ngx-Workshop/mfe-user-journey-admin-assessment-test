@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,12 +14,11 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
 @Component({
   selector: 'ngx-assessment-test-list-accordion',
   imports: [
-    CommonModule,
     MatButtonModule,
     MatChipsModule,
     MatExpansionModule,
-    MatIconModule,
-  ],
+    MatIconModule
+],
   template: `
     <div class="results">
       <div class="results-header">

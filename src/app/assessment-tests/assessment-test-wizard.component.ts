@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -33,7 +33,6 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
   selector: 'ngx-assessment-test-wizard',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
@@ -43,8 +42,8 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
     MatIconModule,
     MatDividerModule,
     MatProgressBarModule,
-    MatSnackBarModule,
-  ],
+    MatSnackBarModule
+],
   template: `
     <section class="page">
       <header class="page-header">

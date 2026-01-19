@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -25,15 +25,14 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
 @Component({
   selector: 'ngx-assessment-test-list',
   imports: [
-    CommonModule,
     MatProgressBarModule,
     MatSnackBarModule,
     MatIconModule,
     MatButtonModule,
     AssessmentTestListFiltersComponent,
     AssessmentTestListAccordionComponent,
-    AssessmentTestListEmptyStateComponent,
-  ],
+    AssessmentTestListEmptyStateComponent
+],
   template: `
     <div class="layout">
       <ngx-assessment-test-list-filters
