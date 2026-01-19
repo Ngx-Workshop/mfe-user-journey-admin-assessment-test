@@ -52,18 +52,6 @@ module.exports = withModuleFederationPlugin({
       requiredVersion: '20.1.0',
     },
 
-    // RxJS + tslib
-    rxjs: {
-      singleton: true,
-      strictVersion: true,
-      requiredVersion: '7.8.2',
-    },
-    tslib: {
-      singleton: true,
-      strictVersion: true,
-      requiredVersion: '2.8.1',
-    },
-
     // Metadata service
     '@tmdjr/ngx-user-metadata': {
       singleton: true,
