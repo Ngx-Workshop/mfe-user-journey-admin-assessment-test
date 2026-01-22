@@ -1,4 +1,3 @@
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -31,8 +30,8 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
     MatButtonModule,
     AssessmentTestListFiltersComponent,
     AssessmentTestListAccordionComponent,
-    AssessmentTestListEmptyStateComponent
-],
+    AssessmentTestListEmptyStateComponent,
+  ],
   template: `
     <div class="layout">
       <ngx-assessment-test-list-filters
@@ -68,9 +67,9 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
       }
     </div>
 
-    <button matFab class="add-fab" (click)="openCreate()">
+    <!-- <button matFab class="add-fab" (click)="openCreate()">
       <mat-icon>add</mat-icon>
-    </button>
+    </button> -->
   `,
   styles: [
     `
@@ -81,12 +80,12 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
         display: grid;
         gap: 0.75rem;
       }
-      button[matFab] {
-        position: fixed;
-        bottom: 48px;
-        right: 20px;
-        z-index: 1000;
-      }
+      // button[matFab] {
+      //   position: fixed;
+      //   bottom: 48px;
+      //   right: 20px;
+      //   z-index: 1000;
+      // }
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
