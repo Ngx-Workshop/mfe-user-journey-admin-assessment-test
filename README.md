@@ -1,78 +1,85 @@
-# mfe-user-journey-admin-assessment-test
+# MFE User Journey - Admin - Assessment Tests
 
-A user-journey micro frontend built with Angular and Module Federation.
+<img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/angular-gradient-wordmark.gif?raw=true" height="132" alt="Angular Logo" /> <img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/module-federation-logo.svg?raw=true" height="132" alt="Angular Logo" />
 
-## Overview
+Angular micro-frontend (remote) for the **Admin Backstage** user journey in the NGX Workshop ecosystem.
 
-This micro frontend is part of the NGX Workshop ecosystem and serves as a user-journey component in the overall application architecture.
+This project is an Angular Module Federation remote for the NGX Workshop “Admin Assessment Tests” experience. It exposes a standalone shell component and route configuration for host integration, and provides a full CRUD UI for assessment tests (list, filter, create, edit, delete) built with Angular Material, signals, and typed reactive forms.
 
-## Getting Started
+Key capabilities:
+
+- Assessment test list with filtering, sorting, and empty states.
+- Multi-step wizard for creating and editing tests with validation.
+- API integration for list/create/update/delete operations.
+- Module Federation exposure for both component and route integration.
+
+## Getting started
 
 ### Prerequisites
 
-- Node.js (v20.19.0 or higher)
-- npm (v8.0.0 or higher)
+- Node.js and npm
+- Angular CLI (optional, project uses local CLI)
 
-### Installation
+### Install dependencies
 
-```bash
-npm install
-```
+- `npm install`
 
-### Development
+### Run the remote locally
 
-To start the development server:
+- `npm start`
 
-```bash
-npm run dev:bundle
-```
+This serves the remote with a Webpack Module Federation entry at /remoteEntry.js.
 
-This will:
-- Start the webpack build in watch mode
-- Serve the bundled application on http://localhost:4201
-- Enable CORS for cross-origin requests
+### Run with the MF dev server (optional)
 
-### Available Scripts
+- `npm run run:all`
 
-- `npm run dev:bundle` - Start development server with watch mode
-- `npm run build` - Build the application for production
-- `npm run watch` - Build in watch mode only
-- `npm run serve:bundle` - Serve the built application
-- `npm test` - Run unit tests
+### Tests
 
-## Architecture
+- `npm test`
 
-This micro frontend uses:
-- **Angular 20+** - Frontend framework
-- **Module Federation** - For micro frontend architecture
-- **Webpack** - Module bundler and build tool
-- **TypeScript** - Type-safe JavaScript development
+### Backend/API
 
-## Module Federation Configuration
+The UI expects the backend to be reachable at `/api/assessment-test` (see [src/app/services/assessment-tests-api.service.ts](src/app/services/assessment-tests-api.service.ts)). Configure the host or local dev server to proxy that path to your API.
 
-The micro frontend is exposed via Module Federation and can be consumed by host applications. Check the `webpack.config.js` file for exposed modules and configuration.
+## Architectural overview
 
-## Development Guidelines
+### Module Federation
 
-1. Follow the established coding standards
-2. Write unit tests for new features
-3. Use TypeScript for type safety
-4. Follow Angular best practices
-5. Keep components focused and reusable
+- Remote name: `ngx-seed-mfe`
+- Remote entry: `remoteEntry.js`
+- Exposes:
+  - `./Component` → [src/app/app.ts](src/app/app.ts)
+  - `./Routes` → [src/app/app.routes.ts](src/app/app.routes.ts)
 
-## Deployment
+See [webpack.config.js](webpack.config.js) for the federation configuration and shared library settings.
 
-The application is automatically deployed via GitHub Actions when changes are pushed to the main branch.
+### Bootstrapping
 
-## Repository
+- [src/main.ts](src/main.ts) dynamically imports [src/bootstrap.ts](src/bootstrap.ts).
+- [src/bootstrap.ts](src/bootstrap.ts) bootstraps the standalone `App` component with [src/app/app.config.ts](src/app/app.config.ts).
+- The app uses zoneless change detection and async animations (see [src/app/app.config.ts](src/app/app.config.ts)).
 
-- **GitHub**: https://github.com/Ngx-Workshop/mfe-user-journey-admin-assessment-test
-- **Type**: user-journey MFE
+### Routing
 
-## Support
+Routes are defined in [src/app/app.routes.ts](src/app/app.routes.ts):
 
-For questions or issues, please refer to the NGX Workshop documentation or create an issue in the repository.
+- `/` → assessment test list
+- `/tests/new` → create wizard
+- `/tests/:id` → edit wizard
 
----
+### UI composition
 
-Generated on Sat Dec 27 20:38:31 EST 2025 using the NGX Workshop MFE creation script.
+- App shell (header + action bar): [src/app/app.ts](src/app/app.ts)
+- List view and filters:
+  - [src/app/assessment-tests/assessment-test-list/assessment-test-list.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list.component.ts)
+  - [src/app/assessment-tests/assessment-test-list/assessment-test-list-filters.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list-filters.component.ts)
+  - [src/app/assessment-tests/assessment-test-list/assessment-test-list-accordion.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list-accordion.component.ts)
+  - [src/app/assessment-tests/assessment-test-list/assessment-test-list-empty-state.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list-empty-state.component.ts)
+- Wizard (create/edit): [src/app/assessment-tests/assessment-test-wizard.component.ts](src/app/assessment-tests/assessment-test-wizard.component.ts)
+
+### Data flow
+
+- API access: [src/app/services/assessment-tests-api.service.ts](src/app/services/assessment-tests-api.service.ts)
+- Form creation and validation: [src/app/services/assessment-test-form.service.ts](src/app/services/assessment-test-form.service.ts)
+- State management uses Angular signals inside the components, with `OnPush` where appropriate.
