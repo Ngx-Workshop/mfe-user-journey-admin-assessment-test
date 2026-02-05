@@ -1,8 +1,8 @@
 # Assessment Tests<br><sup>MFE User Journey - Publisher</sup>
 
-<img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/angular-gradient-wordmark.gif?raw=true" height="132" alt="Angular Logo" /> <img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/module-federation-logo.svg?raw=true" height="132" alt="Angular Logo" />
+<img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/angular-gradient-wordmark.gif?raw=true" height="132" alt="Angular Logo" /> <img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/module-federation-logo.svg?raw=true" height="132" alt="Module Federation" />
 
-Angular micro-frontend (remote) for the **Admin Backstage** user journey in the NGX Workshop ecosystem.
+Angular micro-frontend (remote) for the **Publisher Assessment Tests** user journey in the NGX Workshop ecosystem.
 
 This project is an Angular Module Federation remote for the NGX Workshop “Admin Assessment Tests” experience. It exposes a standalone shell component and route configuration for host integration, and provides a full CRUD UI for assessment tests (list, filter, create, edit, delete) built with Angular Material, signals, and typed reactive forms.
 
