@@ -1,0 +1,354 @@
+<section class="workspace-summary" aria-label="Question readiness">
+  <div>
+    <p class="eyebrow">Build your assessment</p>
+    <h2>
+      Questions <span class="count">{{ questions().length }}</span>
+    </h2>
+    <p>
+      {{ completeCount() }} of {{ questions().length }} ready for
+      review
+    </p>
+  </div>
+  <div class="summary-actions">
+    @if (completeCount() < questions().length) {
+      <button mat-stroked-button (click)="firstIncomplete()">
+        <mat-icon>rule</mat-icon>Find incomplete
+      </button>
+    }
+    <button mat-flat-button (click)="add()">
+      <mat-icon>add</mat-icon>Add question
+    </button>
+  </div>
+</section>
+<div
+  class="completion-track"
+  role="progressbar"
+  aria-label="Questions ready for review"
+  [attr.aria-valuenow]="completeCount()"
+  aria-valuemin="0"
+  [attr.aria-valuemax]="questions().length"
+>
+  <span
+    [style.width.%]="(100 * completeCount()) / questions().length"
+  ></span>
+</div>
+<div class="workspace">
+  <aside class="outline" aria-label="Question outline">
+    <div class="outline-header">
+      <h3>Question outline</h3>
+      <span>{{ matches().length }} matches</span>
+    </div>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"
+      ><mat-label>Find a question</mat-label
+      ><input
+        matInput
+        [value]="search()"
+        (input)="find($any($event.target).value)"
+        placeholder="Search prompt or number"
+      />
+      @if (search()) {
+        <button
+          mat-icon-button
+          matSuffix
+          aria-label="Clear question search"
+          (click)="find('')"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+    <div
+      class="filter-tabs"
+      role="group"
+      aria-label="Filter questions"
+    >
+      <button
+        [attr.aria-pressed]="!incompleteOnly()"
+        (click)="filterIncomplete(false)"
+      >
+        All {{ questions().length }}
+      </button>
+      <button
+        [attr.aria-pressed]="incompleteOnly()"
+        (click)="filterIncomplete(true)"
+      >
+        Incomplete {{ questions().length - completeCount() }}
+      </button>
+    </div>
+    <nav class="question-list" aria-label="Select a question">
+      @for (item of visible(); track item.question) {
+        <button
+          class="question-link"
+          [title]="
+            item.question.controls.question.value ||
+            'Untitled question'
+          "
+          [class.selected]="selected() === item.question"
+          [attr.aria-current]="
+            selected() === item.question ? 'true' : null
+          "
+          [attr.aria-label]="
+            'Question ' +
+            (item.index + 1) +
+            ': ' +
+            (item.question.controls.question.value ||
+              'Untitled question') +
+            (item.question.valid ? ', ready' : ', incomplete')
+          "
+          (click)="select(item.question)"
+        >
+          <span class="number">{{ item.index + 1 }}</span
+          ><span class="question-label"
+            >{{
+              item.question.controls.question.value ||
+                'Untitled question'
+            }}<small>{{
+              item.question.valid ? 'Ready' : 'Incomplete'
+            }}</small></span
+          ><mat-icon [class.ready]="item.question.valid">{{
+            item.question.valid ? 'check_circle' : 'edit_note'
+          }}</mat-icon>
+        </button>
+      } @empty {
+        <div class="no-matches">
+          <p>No questions match.</p>
+          <button mat-button (click)="clearFilters()">
+            Clear filters
+          </button>
+        </div>
+      }
+    </nav>
+    @if (pageCount() > 1) {
+      <div class="outline-pagination">
+        <button
+          mat-icon-button
+          aria-label="Previous question page"
+          [disabled]="currentPage() === 0"
+          (click)="page.set(currentPage() - 1)"
+        >
+          <mat-icon>chevron_left</mat-icon></button
+        ><span>{{ currentPage() + 1 }} / {{ pageCount() }}</span
+        ><button
+          mat-icon-button
+          aria-label="Next question page"
+          [disabled]="currentPage() + 1 === pageCount()"
+          (click)="page.set(currentPage() + 1)"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    }
+  </aside>
+  <section
+    class="question-editor"
+    aria-label="Selected question editor"
+  >
+    <div class="status-message" role="status">
+      {{ announcement() }}
+      @if (removed()) {
+        <button mat-button (click)="undo()">Undo removal</button>
+      }
+    </div>
+    @if (selected(); as q) {
+      <div class="editor-header">
+        <div>
+          <p class="eyebrow">
+            {{ q.valid ? 'Ready for review' : 'Work in progress' }}
+          </p>
+          <h2 #editorHeading tabindex="-1">
+            Question {{ selectedIndex() + 1 }}
+            <span class="muted">of {{ questions().length }}</span>
+          </h2>
+        </div>
+        <div class="question-actions">
+          <button
+            mat-icon-button
+            aria-label="Move question up"
+            title="Move question up"
+            [disabled]="selectedIndex() === 0"
+            (click)="move(-1)"
+          >
+            <mat-icon>arrow_upward</mat-icon></button
+          ><button
+            mat-icon-button
+            aria-label="Move question down"
+            title="Move question down"
+            [disabled]="selectedIndex() === questions().length - 1"
+            (click)="move(1)"
+          >
+            <mat-icon>arrow_downward</mat-icon></button
+          ><button
+            mat-icon-button
+            aria-label="Move question to position"
+            title="Move to a specific position"
+            (click)="openMove()"
+          >
+            <mat-icon>swap_vert</mat-icon></button
+          ><button
+            mat-icon-button
+            aria-label="Duplicate question"
+            title="Duplicate question"
+            (click)="duplicate()"
+          >
+            <mat-icon>content_copy</mat-icon></button
+          ><button
+            mat-icon-button
+            aria-label="Remove selected question"
+            title="Remove question (undo available)"
+            [disabled]="questions().length === 1"
+            (click)="remove()"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      </div>
+      @if (moveOpen()) {
+        <div class="move-controls">
+          <mat-form-field appearance="outline"
+            ><mat-label>Move to position</mat-label
+            ><input
+              matInput
+              type="number"
+              min="1"
+              [max]="questions().length"
+              [value]="moveTarget()"
+              (input)="moveTarget.set(+$any($event.target).value)"
+            /><mat-hint
+              >1–{{ questions().length }}</mat-hint
+            ></mat-form-field
+          ><button
+            mat-flat-button
+            [disabled]="!validMove()"
+            (click)="moveTo()"
+          >
+            Move</button
+          ><button mat-button (click)="moveOpen.set(false)">
+            Cancel
+          </button>
+        </div>
+      }
+      <div class="question-fields" [formGroup]="q">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Prompt</mat-label>
+          <textarea
+            matInput
+            formControlName="question"
+            rows="3"
+            required
+          ></textarea>
+          @if (q.controls.question.hasError('maxlength')) {
+            <mat-error>Use at most 1000 characters.</mat-error>
+          }
+          @if (q.controls.question.hasError('required')) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+
+        <div formArrayName="choices" class="choices">
+          <div class="choices-head">
+            <h4>Choices</h4>
+            <button mat-button (click)="addChoice(q)">
+              <mat-icon>add</mat-icon>
+              Add choice
+            </button>
+          </div>
+          @for (
+            c of q.controls.choices.controls;
+            track $index;
+            let ci = $index
+          ) {
+            <mat-form-field appearance="outline" class="choice">
+              <mat-label>Choice {{ ci + 1 }}</mat-label>
+              <input matInput [formControlName]="ci" />
+              <mat-error
+                >Enter a choice (up to 400 characters).</mat-error
+              >
+              @if (q.controls.choices.length > 2) {
+                <button
+                  mat-icon-button
+                  matSuffix
+                  [attr.aria-label]="'Remove choice ' + (ci + 1)"
+                  (click)="removeChoice(q, ci)"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </mat-form-field>
+          }
+        </div>
+
+        @if (q.touched && q.hasError('duplicateChoices')) {
+          <p class="error" role="alert">
+            Each choice must have a different value.
+          </p>
+        }
+        @if (q.touched && q.hasError('answerChoice')) {
+          <p class="error" role="alert">
+            Select a correct answer from the current choices. A choice
+            may have changed.
+          </p>
+        }
+        <div class="answers">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Correct Answer</mat-label>
+            <mat-select formControlName="answer" required>
+              @for (
+                opt of q.controls.choices.controls;
+                track $index;
+                let oi = $index
+              ) {
+                <mat-option [value]="opt.value">
+                  Choice {{ oi + 1 }} — {{ opt.value }}
+                </mat-option>
+              }
+            </mat-select>
+            @if (q.controls.answer.hasError('required')) {
+              <mat-error>Pick an answer</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Correct Response</mat-label>
+            <textarea
+              matInput
+              formControlName="correctResponse"
+              rows="2"
+              required
+            ></textarea>
+            <mat-error
+              >Enter feedback (up to 1000 characters).</mat-error
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Incorrect Response</mat-label>
+            <textarea
+              matInput
+              formControlName="incorrectResponse"
+              rows="2"
+              required
+            ></textarea>
+            <mat-error
+              >Enter feedback (up to 1000 characters).</mat-error
+            >
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="question-pagination">
+        <button
+          mat-stroked-button
+          [disabled]="selectedIndex() === 0"
+          (click)="adjacent(-1)"
+        >
+          <mat-icon>chevron_left</mat-icon>Previous question</button
+        ><button
+          mat-stroked-button
+          [disabled]="selectedIndex() === questions().length - 1"
+          (click)="adjacent(1)"
+        >
+          Next question<mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    }
+  </section>
+</div>

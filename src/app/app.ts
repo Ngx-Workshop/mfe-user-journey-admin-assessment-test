@@ -31,10 +31,6 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         <a matButton="filled" routerLink="/admin-dashboard"
           ><mat-icon>arrow_back</mat-icon>Admin dashboard</a
         >
-        <div class="flex-spacer"></div>
-        <button matButton="filled" (click)="openCreate()">
-          <mat-icon>note_add</mat-icon>Create New Test
-        </button>
       }
     </div>
     <div class="shell">

@@ -5,7 +5,6 @@ import {
   output,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -16,149 +15,44 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   selector: 'ngx-assessment-test-list-filters',
   imports: [
     MatButtonModule,
-    MatButtonToggleModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatSelectModule,
   ],
   template: `
-    <div class="filters">
-      <div class="filter-row header">
-        <h3>Filters</h3>
-        <button matButton (click)="clear.emit()">
-          <mat-icon>clear_all</mat-icon> Clear All
-        </button>
-      </div>
-      <div class="filter-row">
-        <mat-form-field appearance="outline" class="search-bar">
-          <mat-label>Search</mat-label>
-          <input
-            matInput
-            placeholder="Filter by name or subject"
-            [value]="query()"
-            (input)="queryChange.emit($any($event.target).value)"
-          />
-          @if (query()) {
-            <button
-              mat-icon-button
-              matSuffix
-              aria-label="Clear search"
-              (click)="queryChange.emit('')"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="subject">
-          <mat-label>Subject</mat-label>
-          <mat-select
-            [value]="subjectFilter()"
-            (selectionChange)="
-              subjectFilterChange.emit($any($event.value))
-            "
-          >
-            <mat-option value="ALL">All</mat-option>
-            <mat-option value="ANGULAR">Angular</mat-option>
-            <mat-option value="NESTJS">NestJS</mat-option>
-            <mat-option value="RXJS">RxJS</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="filter-row">
-        <mat-form-field appearance="outline" class="level">
-          <mat-label>Max level</mat-label>
-          <input
-            matInput
-            type="number"
-            min="1"
-            [value]="levelCap() ?? ''"
-            (input)="onLevelCapInput($any($event.target).value)"
-          />
-          @if (levelCap() !== null) {
-            <button
-              mat-icon-button
-              matSuffix
-              aria-label="Clear maximum level"
-              (click)="levelCapChange.emit(null)"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="sort">
-          <mat-label>Sort</mat-label>
-          <mat-select
-            [value]="sort()"
-            (selectionChange)="sortChange.emit($any($event.value))"
-          >
-            <mat-option value="updated">Recently updated</mat-option>
-            <mat-option value="name">Name A→Z</mat-option>
-            <mat-option value="level">Level high→low</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+    <div class="filters" role="search" aria-label="Filter assessments">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+        <mat-label>Find an assessment</mat-label><mat-icon matPrefix>search</mat-icon>
+        <input matInput placeholder="Name, subject or level" [value]="query()" (input)="queryChange.emit($any($event.target).value)" />
+        @if (query()) { <button mat-icon-button matSuffix aria-label="Clear search" (click)="queryChange.emit('')"><mat-icon>close</mat-icon></button> }
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Subject</mat-label>
+        <mat-select [value]="subjectFilter()" (selectionChange)="subjectFilterChange.emit($event.value)">
+          <mat-option value="ALL">All subjects</mat-option><mat-option value="ANGULAR">Angular</mat-option><mat-option value="NESTJS">NestJS</mat-option><mat-option value="RXJS">RxJS</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Maximum level</mat-label>
+        <mat-select [value]="levelCap() ?? 'ALL'" (selectionChange)="levelCapChange.emit($event.value === 'ALL' ? null : $event.value)">
+          <mat-option value="ALL">Any level</mat-option>
+          @for (level of levels(); track level) { <mat-option [value]="level">Level {{ level }} or below</mat-option> }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Sort by</mat-label>
+        <mat-select [value]="sort()" (selectionChange)="sortChange.emit($event.value)"><mat-option value="updated">Recently updated</mat-option><mat-option value="name">Name A–Z</mat-option><mat-option value="level">Highest level</mat-option></mat-select>
+      </mat-form-field>
     </div>
   `,
-  styles: [
-    `
-      @media (max-width: 600px) {
-        .filters {
-          padding: 1rem !important;
-          margin-bottom: 0.5rem !important;
-        }
-        .filter-row .level,
-        .filter-row .sort,
-        .filter-row .subject {
-          flex: 1;
-          min-width: 120px;
-        }
-      }
-      .filters {
-        background: var(--mat-sys-surface-container-low);
-        padding: 1.5rem;
-        border-radius: var(
-          --mat-card-elevated-container-shape,
-          var(--mat-sys-corner-medium)
-        );
-        margin-bottom: 2rem;
-        h3 {
-          margin-top: 0;
-          margin-bottom: 1rem;
-        }
-      }
-      .filter-row {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-bottom: 1rem;
-
-        &.header {
-          justify-content: space-between;
-        }
-        &:last-child {
-          margin-bottom: 0;
-        }
-        .level {
-          width: 140px;
-        }
-        .sort {
-          width: 180px;
-        }
-      }
-
-      .search-bar {
-        width: 100%;
-        max-width: 600px;
-      }
-    `,
-  ],
+  styles: [`
+    .filters { display: grid; grid-template-columns: minmax(200px, 2fr) repeat(3, minmax(155px, 1fr)); gap: 12px; padding: 20px; border-radius: 16px; background: var(--mat-sys-surface-container-low); border: 1px solid var(--mat-sys-outline-variant); }
+    mat-form-field { width: 100%; min-width: 0; }
+    @media (max-width: 1100px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 600px) { .filters { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssessmentTestListFiltersComponent {
+  readonly levels = input<number[]>([]);
   readonly query = input('');
   readonly subjectFilter = input<
     AssessmentTestDto['subject'] | 'ALL'
@@ -172,16 +66,5 @@ export class AssessmentTestListFiltersComponent {
   >();
   readonly levelCapChange = output<number | null>();
   readonly sortChange = output<'updated' | 'name' | 'level'>();
-  readonly clear = output<void>();
 
-  onLevelCapInput(raw: string) {
-    const value = Number(raw);
-    if (!raw) {
-      this.levelCapChange.emit(null);
-      return;
-    }
-    if (!Number.isNaN(value) && value > 0) {
-      this.levelCapChange.emit(value);
-    }
-  }
 }

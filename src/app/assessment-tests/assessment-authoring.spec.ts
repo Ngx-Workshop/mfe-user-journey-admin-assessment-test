@@ -7,6 +7,7 @@ import {
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { AssessmentTestFormService } from '../services/assessment-test-form.service';
 import { AssessmentTestsApiService } from '../services/assessment-tests-api.service';
 import { AssessmentTestListComponent } from './assessment-test-list/assessment-test-list.component';
 import { AssessmentTestWizardComponent } from './assessment-test-wizard.component';
@@ -134,6 +135,27 @@ describe('assessment authoring failures and navigation', () => {
     params.next(convertToParamMap({}));
     expect(component.mode()).toBe('create');
     expect(component.form.controls.name.value).toBe('');
+  });
+  it('opens the first invalid hidden question and returns from paginated review to the right control', () => {
+    params.next(convertToParamMap({ id: '123' }));
+    const component = TestBed.runInInjectionContext(
+      () => new AssessmentTestWizardComponent()
+    );
+    for (let i = 1; i < 25; i++)
+      TestBed.inject(AssessmentTestFormService).addQuestion(
+        component.form
+      );
+    const invalid = component.questionControls()[1];
+    component.setStep(2);
+    expect(component.step()).toBe(1);
+    expect(component.requestedQuestion()).toBe(invalid);
+    component.editQuestion(23);
+    expect(component.requestedQuestion()).toBe(
+      component.questionControls()[23]
+    );
+    component.reviewPage.set(2);
+    expect(component.reviewQuestions().length).toBe(5);
+    expect(component.reviewPageCount()).toBe(3);
   });
   it('asks before discarding edits and clears dirty state after a successful save', () => {
     params.next(convertToParamMap({ id: '123' }));

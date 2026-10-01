@@ -6,11 +6,12 @@ numbered feature folder. Select work from the user's request, not the largest nu
 
 | Feature | Status | Spec | Plan | Tasks | Handoff |
 | --- | --- | --- | --- | --- | --- |
-| No implementation feature specified yet | — | — | — | — | — |
+| Assessment catalog | Complete; locally verified | [Spec](003-assessment-catalog/spec.md) | [Plan](003-assessment-catalog/plan.md) | [Tasks](003-assessment-catalog/tasks.md) | [Handoff](003-assessment-catalog/handoff.md) |
+| Scalable wizard | Implemented; locally verified | [Spec](002-question-workspace/spec.md) | [Plan](002-question-workspace/plan.md) | [Tasks](002-question-workspace/tasks.md) | [Handoff](002-question-workspace/handoff.md) |
 
 Documentation adoption and source review are complete. See the
 [authoring readiness review and handoff](../docs/assessment-readiness.md) for findings
 and follow-up decisions. It is not approval to implement every finding. Retain
 completed feature records when actual implementation work begins.
 
-- [001 Reliable authoring](001-reliable-authoring/spec.md) — Implemented and locally verified; production release pending.
+- [001 Reliable authoring](001-reliable-authoring/spec.md) — Deployed as 7b697c1.

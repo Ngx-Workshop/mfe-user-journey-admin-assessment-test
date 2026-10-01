@@ -1,0 +1,293 @@
+<section class="page">
+  <header class="page-header">
+    <div class="titles">
+      <p class="eyebrow">Assessment wizard</p>
+      <h1>
+        {{
+          form.controls.name.value.trim() ||
+            (mode() === 'create'
+              ? 'Create assessment test'
+              : 'Edit assessment test')
+        }}
+      </h1>
+      <p class="lede">
+        {{
+          step() === 0
+            ? 'Set up your assessment, build questions, then review before saving.'
+            : step() === 1
+              ? 'Choose a question from the outline. Your edits stay with you as you move.'
+              : 'Check the order, answers and feedback before saving your assessment.'
+        }}
+      </p>
+    </div>
+    <span class="save-state"
+      ><mat-icon>{{ form.dirty ? 'edit' : 'cloud_done' }}</mat-icon
+      >{{
+        form.dirty
+          ? 'Unsaved changes'
+          : mode() === 'edit'
+            ? 'Saved assessment'
+            : 'New assessment'
+      }}</span
+    >
+  </header>
+
+  @if (error()) {
+    <div class="error" role="alert">
+      {{ error() }}
+      @if (loadFailed()) {
+        <button mat-stroked-button (click)="retry()">
+          Retry loading
+        </button>
+      }
+    </div>
+  }
+  <fieldset
+    class="editor"
+    [disabled]="loading() || saving() || loadFailed()"
+    [attr.aria-busy]="loading() || saving()"
+    [attr.inert]="loading() || saving() || loadFailed() ? '' : null"
+  >
+    <nav class="steps" aria-label="Assessment steps">
+      <button
+        mat-stroked-button
+        [class.active]="step() === 0"
+        [attr.aria-current]="step() === 0 ? 'step' : null"
+        (click)="setStep(0)"
+      >
+        <span class="step-num">1</span>
+        Basics
+      </button>
+      <button
+        mat-stroked-button
+        [class.active]="step() === 1"
+        [attr.aria-current]="step() === 1 ? 'step' : null"
+        (click)="setStep(1)"
+      >
+        <span class="step-num">2</span>
+        Questions
+      </button>
+      <button
+        mat-stroked-button
+        [class.active]="step() === 2"
+        [attr.aria-current]="step() === 2 ? 'step' : null"
+        (click)="setStep(2)"
+      >
+        <span class="step-num">3</span>
+        Review
+      </button>
+    </nav>
+
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+    @switch (step()) {
+      @case (0) {
+        <mat-card class="panel">
+          <mat-card-header>
+            <mat-card-title>Basics</mat-card-title>
+            <mat-card-subtitle
+              >Give your assessment a name and a place in the learning
+              journey.</mat-card-subtitle
+            >
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="form" class="grid">
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" required />
+                @if (form.controls.name.hasError('required')) {
+                  <mat-error>Required</mat-error>
+                }
+                @if (form.controls.name.hasError('maxlength')) {
+                  <mat-error>Too long</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Subject</mat-label>
+                <mat-select formControlName="subject" required>
+                  @for (s of subjects; track s) {
+                    <mat-option [value]="s">{{ s }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.controls.subject.hasError('required')) {
+                  <mat-error>Pick a subject</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Level</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="1"
+                  formControlName="level"
+                  required
+                />
+                @if (form.controls.level.invalid) {
+                  <mat-error
+                    >Enter a whole number of at least 1</mat-error
+                  >
+                }
+              </mat-form-field>
+            </form>
+            <p class="hint">
+              Tests with learner attempts cannot be changed or
+              deleted.
+            </p>
+          </mat-card-content>
+        </mat-card>
+      }
+      @case (1) {
+        <ngx-question-workspace
+          [form]="form"
+          [requestedQuestion]="requestedQuestion()"
+          (selectionChange)="requestedQuestion.set($event)"
+        />
+      }
+      @case (2) {
+        <mat-card class="panel">
+          <mat-card-header>
+            <mat-card-title>Review</mat-card-title>
+            <mat-card-subtitle
+              >Double check before saving.</mat-card-subtitle
+            >
+          </mat-card-header>
+          <mat-card-content class="review">
+            <div>
+              <p class="label">Name</p>
+              <p class="value">{{ form.value.name }}</p>
+            </div>
+            <div>
+              <p class="label">Subject</p>
+              <p class="value">{{ form.value.subject }}</p>
+            </div>
+            <div>
+              <p class="label">Level</p>
+              <p class="value">{{ form.value.level }}</p>
+            </div>
+            <div>
+              <div class="review-heading">
+                <h3>
+                  {{ questionControls().length }} questions ready
+                </h3>
+                <span
+                  >Expand a question to check its answer and
+                  feedback.</span
+                >
+              </div>
+              <div class="review-questions">
+                @for (
+                  q of reviewQuestions();
+                  track reviewPage() * 10 + $index;
+                  let i = $index
+                ) {
+                  <details class="review-question">
+                    <summary>
+                      <span class="review-number">{{
+                        reviewPage() * 10 + i + 1
+                      }}</span
+                      ><span>{{ q?.question }}</span
+                      ><mat-icon>expand_more</mat-icon>
+                    </summary>
+                    <div class="review-detail">
+                      <button
+                        mat-button
+                        (click)="editQuestion(reviewPage() * 10 + i)"
+                      >
+                        <mat-icon>edit</mat-icon>Edit question
+                        {{ reviewPage() * 10 + i + 1 }}
+                      </button>
+                      <ul>
+                        @for (c of q?.choices ?? []; track $index) {
+                          <li [class.correct]="c === q?.answer">
+                            {{ c }}
+                            @if (c === q?.answer) {
+                              <strong> (correct answer)</strong>
+                            }
+                          </li>
+                        }
+                      </ul>
+                      <p>
+                        <strong>Correct feedback:</strong>
+                        {{ q?.correctResponse }}
+                      </p>
+                      <p>
+                        <strong>Incorrect feedback:</strong>
+                        {{ q?.incorrectResponse }}
+                      </p>
+                    </div>
+                  </details>
+                }
+              </div>
+              @if (questionControls().length > 10) {
+                <div class="review-pagination">
+                  <button
+                    mat-button
+                    [disabled]="reviewPage() === 0"
+                    (click)="reviewPage.set(reviewPage() - 1)"
+                  >
+                    Previous 10</button
+                  ><span
+                    >Page {{ reviewPage() + 1 }} of
+                    {{ reviewPageCount() }}</span
+                  ><button
+                    mat-button
+                    [disabled]="reviewPage() + 1 >= reviewPageCount()"
+                    (click)="reviewPage.set(reviewPage() + 1)"
+                  >
+                    Next 10
+                  </button>
+                </div>
+              }
+            </div>
+            <p class="hint">
+              Once learners have started this assessment, its
+              questions cannot be changed or deleted.
+            </p>
+          </mat-card-content>
+        </mat-card>
+      }
+    }
+
+    <footer class="footer">
+      <div class="footer-left">
+        <button
+          mat-stroked-button
+          (click)="prevStep()"
+          [disabled]="step() === 0"
+        >
+          Back
+        </button>
+      </div>
+      <div class="footer-right">
+        @if (step() < 2) {
+          <button
+            mat-flat-button
+            color="primary"
+            (click)="nextStep()"
+          >
+            {{ step() === 0 ? 'Build questions' : 'Review assessment'
+            }}<mat-icon>arrow_forward</mat-icon>
+          </button>
+        } @else {
+          <button
+            mat-flat-button
+            color="primary"
+            [disabled]="form.invalid || saving()"
+            (click)="submit()"
+          >
+            {{
+              saving()
+                ? 'Saving…'
+                : mode() === 'create'
+                  ? 'Create test'
+                  : 'Save changes'
+            }}
+          </button>
+        }
+      </div>
+    </footer>
+  </fieldset>
+</section>

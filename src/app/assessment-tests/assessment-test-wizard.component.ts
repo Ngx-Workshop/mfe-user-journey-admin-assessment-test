@@ -5,11 +5,11 @@ import {
   HostListener,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -22,6 +22,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { QuestionWorkspaceComponent } from './question-workspace.component';
 import { apiError } from '../services/api-error';
 import {
   AssessmentSubject,
@@ -36,629 +37,18 @@ import { AssessmentTestsApiService } from '../services/assessment-tests-api.serv
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    QuestionWorkspaceComponent,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatIconModule,
-    MatDividerModule,
     MatProgressBarModule,
     MatSnackBarModule,
   ],
-  template: `
-    <section class="page">
-      <header class="page-header">
-        <button mat-button (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
-          Back
-        </button>
-        <div class="titles">
-          <p class="eyebrow">Assessment wizard</p>
-          <h1>
-            {{
-              mode() === 'create'
-                ? 'Create assessment test'
-                : 'Edit assessment test'
-            }}
-          </h1>
-          <p class="lede">
-            Move through details, questions, and review to save your
-            assessment. Tests with learner attempts cannot be changed
-            or deleted.
-          </p>
-        </div>
-        <div class="progress">
-          <div class="dot" [class.active]="step() >= 0"></div>
-          <div class="dot" [class.active]="step() >= 1"></div>
-          <div class="dot" [class.active]="step() >= 2"></div>
-        </div>
-      </header>
-
-      @if (error()) {
-        <div class="error" role="alert">
-          {{ error() }}
-          @if (loadFailed()) {
-            <button mat-stroked-button (click)="retry()">
-              Retry loading
-            </button>
-          }
-        </div>
-      }
-      <fieldset
-        class="editor"
-        [disabled]="loading() || saving() || loadFailed()"
-        [attr.aria-busy]="loading() || saving()"
-        [attr.inert]="
-          loading() || saving() || loadFailed() ? '' : null
-        "
-      >
-        <nav class="steps" aria-label="Assessment steps">
-          <button
-            mat-stroked-button
-            [class.active]="step() === 0"
-            (click)="setStep(0)"
-          >
-            <span class="step-num">1</span>
-            Basics
-          </button>
-          <button
-            mat-stroked-button
-            [class.active]="step() === 1"
-            (click)="setStep(1)"
-          >
-            <span class="step-num">2</span>
-            Questions
-          </button>
-          <button
-            mat-stroked-button
-            [class.active]="step() === 2"
-            (click)="setStep(2)"
-          >
-            <span class="step-num">3</span>
-            Review
-          </button>
-        </nav>
-
-        @if (loading()) {
-          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-        }
-        @switch (step()) {
-          @case (0) {
-            <mat-card class="panel">
-              <mat-card-header>
-                <mat-card-title>Basics</mat-card-title>
-                <mat-card-subtitle
-                  >Set name, subject, and level.</mat-card-subtitle
-                >
-              </mat-card-header>
-              <mat-card-content>
-                <form [formGroup]="form" class="grid">
-                  <mat-form-field appearance="outline" class="full">
-                    <mat-label>Name</mat-label>
-                    <input matInput formControlName="name" required />
-                    @if (form.controls.name.hasError('required')) {
-                      <mat-error>Required</mat-error>
-                    }
-                    @if (form.controls.name.hasError('maxlength')) {
-                      <mat-error>Too long</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Subject</mat-label>
-                    <mat-select formControlName="subject" required>
-                      @for (s of subjects; track s) {
-                        <mat-option [value]="s">{{ s }}</mat-option>
-                      }
-                    </mat-select>
-                    @if (form.controls.subject.hasError('required')) {
-                      <mat-error>Pick a subject</mat-error>
-                    }
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Level</mat-label>
-                    <input
-                      matInput
-                      type="number"
-                      min="1"
-                      formControlName="level"
-                      required
-                    />
-                    @if (form.controls.level.invalid) {
-                      <mat-error
-                        >Enter a whole number of at least 1</mat-error
-                      >
-                    }
-                  </mat-form-field>
-                </form>
-              </mat-card-content>
-            </mat-card>
-          }
-          @case (1) {
-            <mat-card class="panel">
-              <mat-card-header>
-                <mat-card-title>Questions</mat-card-title>
-                <mat-card-subtitle
-                  >Draft each prompt and choices.</mat-card-subtitle
-                >
-              </mat-card-header>
-              <mat-card-content class="questions">
-                <div class="questions-head">
-                  <p class="hint">
-                    Min 1 question, min 2 choices each.
-                  </p>
-                  <button mat-stroked-button (click)="addQuestion()">
-                    <mat-icon>add</mat-icon>
-                    Add question
-                  </button>
-                </div>
-
-                @for (
-                  q of questionControls();
-                  track q;
-                  let i = $index
-                ) {
-                  <mat-card class="question-card" [formGroup]="q">
-                    <div class="question-title">
-                      <div class="title-text">
-                        <span class="badge">{{ i + 1 }}</span>
-                        <h3>Question {{ i + 1 }}</h3>
-                      </div>
-                      <button
-                        mat-icon-button
-                        [attr.aria-label]="
-                          'Remove question ' + (i + 1)
-                        "
-                        (click)="removeQuestion(i)"
-                        [disabled]="questionControls().length <= 1"
-                      >
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
-
-                    <mat-form-field appearance="outline" class="full">
-                      <mat-label>Prompt</mat-label>
-                      <textarea
-                        matInput
-                        formControlName="question"
-                        rows="3"
-                        required
-                      ></textarea>
-                      @if (
-                        q.controls.question.hasError('maxlength')
-                      ) {
-                        <mat-error
-                          >Use at most 1000 characters.</mat-error
-                        >
-                      }
-                      @if (q.controls.question.hasError('required')) {
-                        <mat-error>Required</mat-error>
-                      }
-                    </mat-form-field>
-
-                    <div formArrayName="choices" class="choices">
-                      <div class="choices-head">
-                        <h4>Choices</h4>
-                        <button mat-button (click)="addChoice(q)">
-                          <mat-icon>add</mat-icon>
-                          Add choice
-                        </button>
-                      </div>
-                      @for (
-                        c of q.controls.choices.controls;
-                        track c;
-                        let ci = $index
-                      ) {
-                        <mat-form-field
-                          appearance="outline"
-                          class="choice"
-                        >
-                          <mat-label>Choice {{ ci + 1 }}</mat-label>
-                          <input matInput [formControlName]="ci" />
-                          <mat-error
-                            >Enter a choice (up to 400
-                            characters).</mat-error
-                          >
-                          @if (q.controls.choices.length > 2) {
-                            <button
-                              mat-icon-button
-                              matSuffix
-                              [attr.aria-label]="
-                                'Remove choice ' + (ci + 1)
-                              "
-                              (click)="removeChoice(q, ci)"
-                            >
-                              <mat-icon>close</mat-icon>
-                            </button>
-                          }
-                        </mat-form-field>
-                      }
-                    </div>
-
-                    @if (
-                      q.touched && q.hasError('duplicateChoices')
-                    ) {
-                      <p class="error" role="alert">
-                        Each choice must have a different value.
-                      </p>
-                    }
-                    @if (q.touched && q.hasError('answerChoice')) {
-                      <p class="error" role="alert">
-                        Select a correct answer from the current
-                        choices. A choice may have changed.
-                      </p>
-                    }
-                    <div class="answers">
-                      <mat-form-field
-                        appearance="outline"
-                        class="full"
-                      >
-                        <mat-label>Correct Answer</mat-label>
-                        <mat-select formControlName="answer" required>
-                          @for (
-                            opt of q.controls.choices.controls;
-                            track opt;
-                            let oi = $index
-                          ) {
-                            <mat-option [value]="opt.value">
-                              Choice {{ oi + 1 }} — {{ opt.value }}
-                            </mat-option>
-                          }
-                        </mat-select>
-                        @if (q.controls.answer.hasError('required')) {
-                          <mat-error>Pick an answer</mat-error>
-                        }
-                      </mat-form-field>
-
-                      <mat-form-field
-                        appearance="outline"
-                        class="full"
-                      >
-                        <mat-label>Correct Response</mat-label>
-                        <textarea
-                          matInput
-                          formControlName="correctResponse"
-                          rows="2"
-                          required
-                        ></textarea>
-                        <mat-error
-                          >Enter feedback (up to 1000
-                          characters).</mat-error
-                        >
-                      </mat-form-field>
-
-                      <mat-form-field
-                        appearance="outline"
-                        class="full"
-                      >
-                        <mat-label>Incorrect Response</mat-label>
-                        <textarea
-                          matInput
-                          formControlName="incorrectResponse"
-                          rows="2"
-                          required
-                        ></textarea>
-                        <mat-error
-                          >Enter feedback (up to 1000
-                          characters).</mat-error
-                        >
-                      </mat-form-field>
-                    </div>
-                  </mat-card>
-                }
-              </mat-card-content>
-            </mat-card>
-          }
-          @case (2) {
-            <mat-card class="panel">
-              <mat-card-header>
-                <mat-card-title>Review</mat-card-title>
-                <mat-card-subtitle
-                  >Double check before saving.</mat-card-subtitle
-                >
-              </mat-card-header>
-              <mat-card-content class="review">
-                <div>
-                  <p class="label">Name</p>
-                  <p class="value">{{ form.value.name }}</p>
-                </div>
-                <div>
-                  <p class="label">Subject</p>
-                  <p class="value">{{ form.value.subject }}</p>
-                </div>
-                <div>
-                  <p class="label">Level</p>
-                  <p class="value">{{ form.value.level }}</p>
-                </div>
-                <div>
-                  <p class="label">Questions</p>
-                  <div class="review-questions">
-                    @for (
-                      q of form.value.testQuestions ?? [];
-                      track q;
-                      let i = $index
-                    ) {
-                      <div class="review-question">
-                        <p class="q-title">
-                          {{ i + 1 }}. {{ q?.question }}
-                        </p>
-                        <ul>
-                          @for (c of q?.choices ?? []; track c) {
-                            <li [class.correct]="c === q?.answer">
-                              {{ c }}
-                              @if (c === q?.answer) {
-                                <strong> (correct answer)</strong>
-                              }
-                            </li>
-                          }
-                        </ul>
-                        <p>
-                          <strong>Correct feedback:</strong>
-                          {{ q?.correctResponse }}
-                        </p>
-                        <p>
-                          <strong>Incorrect feedback:</strong>
-                          {{ q?.incorrectResponse }}
-                        </p>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          }
-        }
-
-        <footer class="footer">
-          <div class="footer-left">
-            <button
-              mat-stroked-button
-              (click)="prevStep()"
-              [disabled]="step() === 0"
-            >
-              Back
-            </button>
-          </div>
-          <div class="footer-right">
-            @if (step() < 2) {
-              <button
-                mat-flat-button
-                color="primary"
-                (click)="nextStep()"
-              >
-                Next
-              </button>
-            } @else {
-              <button
-                mat-flat-button
-                color="primary"
-                [disabled]="form.invalid || saving()"
-                (click)="submit()"
-              >
-                {{
-                  saving()
-                    ? 'Saving…'
-                    : mode() === 'create'
-                      ? 'Create test'
-                      : 'Save changes'
-                }}
-              </button>
-            }
-          </div>
-        </footer>
-      </fieldset>
-    </section>
-  `,
-  styles: [
-    `
-      .editor {
-        border: 0;
-        padding: 0;
-        margin: 0;
-        min-width: 0;
-        display: grid;
-        gap: 1rem;
-      }
-      .error {
-        color: var(--mat-sys-error);
-        padding: 0.5rem 0;
-      }
-      .review-question {
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-      }
-      .page {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-        max-width: 1080px;
-        margin: 0 auto;
-      }
-      .page-header {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 1rem;
-        align-items: center;
-      }
-      .titles h1 {
-        margin: 0;
-      }
-      .titles .lede {
-        margin: 0.15rem 0 0;
-        opacity: 0.8;
-      }
-      .eyebrow {
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: 0.78rem;
-        margin: 0;
-        color: var(--mat-sys-secondary);
-      }
-      .progress {
-        display: flex;
-        gap: 0.35rem;
-        align-items: center;
-      }
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.12);
-      }
-      .dot.active {
-        background: var(--mat-sys-primary);
-      }
-      .steps {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-      }
-      .steps button {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-      }
-      .steps button.active {
-        border-color: var(--mat-sys-primary);
-        color: var(--mat-sys-primary);
-        background: rgba(0, 0, 0, 0.02);
-      }
-      .step-num {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: var(--mat-sys-primary-container);
-        color: var(--mat-sys-on-primary-container);
-        font-weight: 600;
-      }
-      .panel {
-        padding: 0.75rem;
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: 1fr 240px 160px;
-        gap: 0.75rem;
-      }
-      .full {
-        width: 100%;
-      }
-      .questions {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-      .questions-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .question-card {
-        padding: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 12px;
-      }
-      .question-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .title-text {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      .badge {
-        background: var(--mat-sys-primary);
-        color: var(--mat-sys-on-primary);
-        border-radius: 50%;
-        width: 28px;
-        height: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-      }
-      .choices {
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-      .choices-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .choice {
-        width: 100%;
-      }
-      .answers {
-        display: grid;
-        grid-template-columns: repeat(
-          auto-fit,
-          minmax(min(100%, 240px), 1fr)
-        );
-        gap: 0.5rem;
-      }
-      .hint {
-        margin: 0;
-        opacity: 0.7;
-      }
-      .footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0 1.5rem;
-      }
-      .review {
-        display: grid;
-        gap: 0.75rem;
-      }
-      .label {
-        margin: 0;
-        opacity: 0.7;
-        font-weight: 600;
-      }
-      .value {
-        margin: 0.15rem 0 0;
-        font-size: 1rem;
-      }
-      .review-questions {
-        display: grid;
-        gap: 0.75rem;
-      }
-      .review-question {
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 8px;
-        padding: 0.5rem 0.75rem;
-      }
-      .review-question ul {
-        margin: 0.5rem 0 0;
-        padding-left: 1.25rem;
-      }
-      .review-question li.correct {
-        color: var(--mat-sys-primary);
-        font-weight: 600;
-      }
-      @media (max-width: 900px) {
-        .page-header {
-          grid-template-columns: 1fr;
-          align-items: flex-start;
-        }
-        .grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    `,
-  ],
+  templateUrl: './assessment-test-wizard.component.html',
+  styleUrl: './assessment-test-wizard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssessmentTestWizardComponent {
@@ -673,6 +63,10 @@ export class AssessmentTestWizardComponent {
     'NESTJS',
     'RXJS',
   ];
+  private readonly workspace = viewChild(QuestionWorkspaceComponent);
+  readonly requestedQuestion =
+    signal<FormGroup<TestQuestionForm> | null>(null);
+  readonly reviewPage = signal(0);
   readonly step = signal(0);
   readonly mode = signal<'create' | 'edit'>('create');
   readonly loading = signal(false);
@@ -696,6 +90,8 @@ export class AssessmentTestWizardComponent {
         this.testId.set(id);
         this.mode.set(id ? 'edit' : 'create');
         this.step.set(0);
+        this.requestedQuestion.set(null);
+        this.reviewPage.set(0);
         this.error.set(null);
         this.loadFailed.set(false);
         this.form = this.formSvc.createForm();
@@ -736,7 +132,25 @@ export class AssessmentTestWizardComponent {
         return;
       }
     }
+    if (next === 2) this.reviewPage.set(0);
     this.step.set(next);
+  }
+
+  editQuestion(index: number) {
+    this.requestedQuestion.set(this.questionControls()[index]);
+    this.step.set(1);
+  }
+
+  reviewQuestions() {
+    return this.form
+      .getRawValue()
+      .testQuestions.slice(
+        this.reviewPage() * 10,
+        (this.reviewPage() + 1) * 10
+      );
+  }
+  reviewPageCount() {
+    return Math.ceil(this.questionControls().length / 10);
   }
 
   nextStep() {
@@ -745,22 +159,6 @@ export class AssessmentTestWizardComponent {
 
   prevStep() {
     this.step.update((s) => Math.max(0, s - 1));
-  }
-
-  addQuestion() {
-    this.formSvc.addQuestion(this.form);
-  }
-
-  removeQuestion(index: number) {
-    this.formSvc.removeQuestion(this.form, index);
-  }
-
-  addChoice(question: FormGroup<TestQuestionForm>) {
-    this.formSvc.addChoice(question);
-  }
-
-  removeChoice(question: FormGroup<TestQuestionForm>, index: number) {
-    this.formSvc.removeChoice(question, index);
   }
 
   goBack() {
@@ -847,6 +245,13 @@ export class AssessmentTestWizardComponent {
 
     if (current === 1) {
       this.form.controls.testQuestions.markAllAsTouched();
+      const invalid = this.questionControls().find(
+        (question) => question.invalid
+      );
+      if (invalid) {
+        this.requestedQuestion.set(invalid);
+        this.workspace()?.showInvalid(invalid);
+      }
       return this.form.controls.testQuestions.valid;
     }
 

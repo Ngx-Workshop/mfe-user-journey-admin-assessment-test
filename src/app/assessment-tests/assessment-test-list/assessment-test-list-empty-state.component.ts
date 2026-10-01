@@ -12,13 +12,10 @@ import { MatIconModule } from '@angular/material/icon';
   template: `
     <div class="empty">
       <mat-icon>inbox</mat-icon>
-      <p>
-        No assessment tests yet. Create a test with questions, choices
-        and feedback.
-      </p>
+      <h3>Your assessment library starts here</h3><p>Create a test with questions, answer choices and helpful feedback.</p>
       <button mat-flat-button color="primary" (click)="create.emit()">
         <mat-icon>add</mat-icon>
-        Add your first test
+        Create your first assessment
       </button>
     </div>
   `,
@@ -29,9 +26,13 @@ import { MatIconModule } from '@angular/material/icon';
         gap: 0.75rem;
         justify-items: center;
         padding: 2rem 0;
-        opacity: 0.75;
+        text-align: center;
+        border: 1px dashed var(--mat-sys-outline-variant);
+        border-radius: 16px;
       }
-      .empty mat-icon {
+      h3, p { margin: 0; }
+      p { color: var(--mat-sys-on-surface-variant); }
+      .empty > mat-icon {
         font-size: 48px;
         width: 48px;
         height: 48px;

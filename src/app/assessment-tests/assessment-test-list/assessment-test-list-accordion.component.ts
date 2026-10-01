@@ -1,205 +1,67 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contracts';
 
 @Component({
   selector: 'ngx-assessment-test-list-accordion',
-  imports: [
-    MatButtonModule,
-    MatChipsModule,
-    MatExpansionModule,
-    MatIconModule,
-    MatTooltipModule,
-  ],
+  imports: [DatePipe, MatButtonModule, MatIconModule, MatMenuModule],
   template: `
-    <div class="results">
-      <div class="results-header">
-        <button
-          mat-icon-button
-          matTooltip="Refresh list"
-          aria-label="Refresh"
-          (click)="refresh.emit()"
-          [disabled]="busy()"
-        >
-          <mat-icon>refresh</mat-icon>
-        </button>
-        <h4>
-          Results {{ filteredCount() }} of {{ totalCount() }}
-          @if (subjectFilter() !== 'ALL') {
-            · Subject: {{ subjectFilter() }}
-          }
-          @if (levelCap() !== null) {
-            · Level ≤
-            {{ levelCap() }}
-          }
-        </h4>
-      </div>
-
-      <mat-accordion class="list" hideToggle>
-        @for (t of tests(); track t._id) {
-          <mat-expansion-panel>
-            <mat-expansion-panel-header>
-              <mat-panel-title>{{ t.name }}</mat-panel-title>
-              <mat-panel-description>
-                <mat-chip-set>
-                  <mat-chip appearance="outlined"
-                    >Level {{ t.level }}</mat-chip
-                  >
-                  <mat-chip appearance="outlined" color="primary">{{
-                    t.subject
-                  }}</mat-chip>
-                </mat-chip-set>
-              </mat-panel-description>
-            </mat-expansion-panel-header>
-            <div class="row-actions">
-              <button
-                mat-stroked-button
-                (click)="edit.emit(t)"
-                [disabled]="busy()"
-                [attr.aria-label]="'Edit ' + t.name"
-              >
-                <mat-icon>edit</mat-icon>Edit
-              </button>
-              <button
-                mat-stroked-button
-                (click)="delete.emit(t)"
-                [disabled]="busy()"
-                [attr.aria-label]="'Delete ' + t.name"
-              >
-                <mat-icon>delete</mat-icon>Delete
-              </button>
+    <ul class="assessment-list" aria-label="Assessment tests">
+      @for (test of tests(); track test._id) {
+        <li class="assessment-row">
+          <div class="row-top">
+            <div class="identity">
+              <div class="metadata"><span class="subject">{{ test.subject }}</span><span>Level {{ test.level }}</span></div>
+              <h3><button class="title-link" (click)="edit.emit(test)" [disabled]="busy()">{{ test.name }}</button></h3>
+              <div class="details-line"><span>{{ test.testQuestions.length }} {{ test.testQuestions.length === 1 ? 'question' : 'questions' }}</span><span>Updated {{ test.lastUpdated ? (test.lastUpdated | date:'mediumDate') : 'date unavailable' }}</span></div>
             </div>
-
-            @if (t.testQuestions.length) {
-              @for (q of t.testQuestions; track $index) {
-                <div class="details">
-                  <b>{{ q.question }}</b>
-                  <ol class="upper-alpha">
-                    @for (choices of q.choices; track $index) {
-                      <li>
-                        <span class="a">{{ choices.value }}</span>
-                      </li>
-                    }
-                  </ol>
-
-                  <span class="answer"
-                    >Answer: <i>{{ q.answer }}</i></span
-                  >
-                  <p>
-                    <strong>Correct feedback:</strong>
-                    {{ q.correctResponse }}
-                  </p>
-                  <p>
-                    <strong>Incorrect feedback:</strong>
-                    {{ q.incorrectResponse }}
-                  </p>
-                </div>
-              }
-            }
-          </mat-expansion-panel>
-        }
-      </mat-accordion>
-    </div>
+            <div class="actions">
+              <button mat-stroked-button (click)="edit.emit(test)" [disabled]="busy()" [attr.aria-label]="'Edit ' + test.name"><mat-icon>edit</mat-icon>Edit</button>
+              <button mat-icon-button [matMenuTriggerFor]="menu" [disabled]="busy()" [attr.aria-label]="'More actions for ' + test.name"><mat-icon>more_vert</mat-icon></button>
+              <mat-menu #menu="matMenu"><button mat-menu-item (click)="delete.emit(test)"><mat-icon>delete_outline</mat-icon><span>Delete assessment</span></button></mat-menu>
+            </div>
+          </div>
+          @if (test.testQuestions.length) {
+            <details class="preview">
+              <summary>Preview questions <span>{{ test.testQuestions.length > 3 ? 'First 3 of ' + test.testQuestions.length : test.testQuestions.length + ' total' }}</span></summary>
+              <ol>@for (question of test.testQuestions.slice(0, 3); track $index) { <li>{{ question.question }}</li> }</ol>
+              <p>Open the editor to review all questions, answers and feedback.</p>
+            </details>
+          }
+        </li>
+      }
+    </ul>
   `,
-  styles: [
-    `
-      @use '@angular/material' as mat;
-      .row-actions {
-        display: flex;
-        gap: 0.5rem;
-        margin: 0.5rem 0 1rem;
-      }
-      .details {
-        overflow-wrap: anywhere;
-        white-space: pre-wrap;
-      }
-      @media (max-width: 600px) {
-        .results {
-          padding: 0.5rem !important;
-        }
-        mat-expansion-panel-header {
-          height: auto;
-          min-height: 64px;
-          padding: 0.75rem;
-        }
-        mat-panel-description {
-          flex: 0;
-          margin: 0;
-        }
-        mat-panel-title {
-          overflow-wrap: anywhere;
-        }
-      }
-      .list {
-        width: 100%;
-        @include mat.expansion-overrides(
-          (
-            container-text-color: var(--mat-sys-on-surface),
-            container-background-color: var(
-                --mat-sys-surface-container-high
-              ),
-          )
-        );
-      }
-      .upper-alpha {
-        list-style: lower-alpha;
-      }
-      .questions-list {
-        margin: 0.25rem 0 0;
-        padding-left: 1rem;
-        display: grid;
-        gap: 0.25rem;
-      }
-      .answer {
-        margin-bottom: 1rem;
-      }
-      .results {
-        background: var(--mat-sys-surface-container-low);
-        padding: 1.5rem;
-        border-radius: var(
-          --mat-card-elevated-container-shape,
-          var(--mat-sys-corner-medium)
-        );
-      }
-      .results-header {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-        margin-bottom: 1rem;
-      }
-      .details {
-        background: var(--mat-sys-surface-container-highest);
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        border-radius: var(
-          --mat-card-elevated-container-shape,
-          var(--mat-sys-corner-medium)
-        );
-      }
-    `,
-  ],
+  styles: [`
+    :host { display: block; }
+    .assessment-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+    .assessment-row { border: 1px solid var(--mat-sys-outline-variant); border-radius: 16px; background: var(--mat-sys-surface-container-low); overflow: hidden; }
+    .row-top { display: flex; align-items: center; gap: 20px; padding: 22px 24px; }
+    .identity { flex: 1; min-width: 0; }
+    .metadata, .details-line, .actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .metadata { font-size: 12px; font-weight: 600; }
+    .subject { color: var(--mat-sys-primary); letter-spacing: .06em; }
+    h3 { margin: 8px 0; }
+    .title-link { font: inherit; font-size: 20px; font-weight: 600; color: var(--mat-sys-on-surface); border: 0; padding: 0; background: transparent; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+    .title-link:hover { color: var(--mat-sys-primary); text-decoration: underline; }
+    .title-link:focus-visible, summary:focus-visible { outline: 2px solid var(--mat-sys-primary); outline-offset: 4px; }
+    .details-line { font-size: 13px; color: var(--mat-sys-on-surface-variant); gap: 8px 20px; }
+    .actions { flex-wrap: nowrap; gap: 4px; }
+    .preview { border-top: 1px solid var(--mat-sys-outline-variant); padding: 12px 24px; }
+    summary { cursor: pointer; font-size: 13px; font-weight: 500; }
+    summary span { color: var(--mat-sys-on-surface-variant); margin-left: 12px; font-weight: 400; }
+    ol { padding-left: 22px; display: grid; gap: 12px; overflow-wrap: anywhere; }
+    .preview p { font-size: 13px; color: var(--mat-sys-on-surface-variant); }
+    @media (max-width: 600px) { .row-top { padding: 16px; flex-wrap: wrap; gap: 12px; } .identity { flex-basis: 100%; } .actions { margin-left: auto; } .preview { padding: 12px 16px; } .title-link { font-size: 18px; } }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssessmentTestListAccordionComponent {
   readonly busy = input(false);
-  readonly refresh = output<void>();
   readonly tests = input<AssessmentTestDto[]>([]);
-  readonly filteredCount = input.required<number>();
-  readonly totalCount = input.required<number>();
-  readonly subjectFilter = input<
-    AssessmentTestDto['subject'] | 'ALL'
-  >('ALL');
-  readonly levelCap = input<number | null>(null);
-
   readonly edit = output<AssessmentTestDto>();
   readonly delete = output<AssessmentTestDto>();
 }
