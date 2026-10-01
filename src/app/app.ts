@@ -23,15 +23,19 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
       <h1>Assessment Tests</h1>
     </ngx-particle-header>
     <div class="action-bar">
-      <a matButton="filled" [routerLink]="lastRouteURL()">
-        <mat-icon>arrow_back</mat-icon> Back to
-        {{ lastRouteName() }}</a
-      >
-      <div class="flex-spacer"></div>
-      <button matButton="filled" (click)="openCreate()">
-        <mat-icon>note_add</mat-icon>
-        Create New Test
-      </button>
+      @if (editing()) {
+        <a matButton="filled" [routerLink]="['.']"
+          ><mat-icon>arrow_back</mat-icon>All assessments</a
+        >
+      } @else {
+        <a matButton="filled" routerLink="/admin-dashboard"
+          ><mat-icon>arrow_back</mat-icon>Admin dashboard</a
+        >
+        <div class="flex-spacer"></div>
+        <button matButton="filled" (click)="openCreate()">
+          <mat-icon>note_add</mat-icon>Create New Test
+        </button>
+      }
     </div>
     <div class="shell">
       <div class="container">
@@ -41,6 +45,9 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
   `,
   styles: [
     `
+      .flex-spacer {
+        flex: 1;
+      }
       .shell {
         display: flex;
         justify-content: center;
@@ -49,6 +56,8 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         padding: 1rem;
         flex: 0 1 clamp(480px, 70vw, 1400px);
         max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
       }
       h1 {
         font-size: 1.85rem;
@@ -79,22 +88,12 @@ export class App {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly lastRouteURL = computed(
+  protected readonly editing = computed(
     () =>
       this.router
         .lastSuccessfulNavigation()
-        ?.previousNavigation?.extractedUrl.toString() ??
-      '/admin-dashboard'
-  );
-
-  protected readonly lastRouteName = computed(
-    () =>
-      this.router
-        .lastSuccessfulNavigation()
-        ?.previousNavigation?.extractedUrl.toString()
-        .split('/')[1]
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Admin Dashboard'
+        ?.finalUrl?.toString()
+        .includes('/tests/') ?? false
   );
 
   openCreate() {

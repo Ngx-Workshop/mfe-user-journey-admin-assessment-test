@@ -1,7 +1,14 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { App } from './app/app';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+@Component({
+  selector: 'ngx-seed-mfe',
+  imports: [RouterOutlet],
+  template: '<router-outlet />',
+})
+class StandaloneRoot {}
 import { appConfig } from './app/app.config';
 
-bootstrapApplication(App, appConfig).catch((error) => {
+bootstrapApplication(StandaloneRoot, appConfig).catch((error) => {
   console.error(error);
 });

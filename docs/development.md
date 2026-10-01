@@ -1,42 +1,34 @@
 # Development and verification
 
-Use Node 22, matching CI, and the committed lockfile. Commands run from this repo.
+Use Node 22 and `npm ci`, matching CI.
 
-| Purpose | Command | Notes |
-| --- | --- | --- |
-| Install | `npm ci` | Scoped package access may be required |
-| Dev server | `npm start` | Development configuration, port 4201 |
-| Bundle watch | `npm run watch` | Uses production configuration in this repository |
-| Hosted-shell loop | `npm run dev:bundle` | Production watch + CORS-enabled static serving on 4201 |
-| Production build | `npm run build` | Outputs dist/mfe-user-journey-admin-assessment-test |
-| Unit tests | `npm test -- --watch=false --browsers=ChromeHeadless` | Karma configured; no source spec files in baseline |
+| Purpose | Command |
+| --- | --- |
+| Standalone dev server | `npm start` |
+| Development bundle watcher | `npm run watch` |
+| Hosted shell bundle + static server on 4201 | `npm run dev:bundle` |
+| Production build | `npm run build` |
+| Regression tests | `npm test -- --watch=false --browsers=ChromeHeadless` |
 
-No lint script or configured end-to-end runner exists. The bundle server does not
-proxy API calls. `api/assessment-test` resolves against the hosting document's base;
-configure a deliberate proxy/API boundary before local mutations. Do not assume
-loading a localhost remote makes API requests local. Check port 4201 occupancy and
-preserve other running remotes. Use a separate build output path if a watch session
-already serves this repo's dist folder.
+Development bundles select `http://localhost:3005/assessment-test` via Angular file
+replacement. Start the companion service with `npm run start:local` and MongoDB on
+27017. That mode uses a separate database and synthetic local admin identity. The
+host shell still requires its normal sign-in. A localhost remote alone does not
+change backend targets; the environment replacement is essential.
 
-## Checks for implementation work
+Production uses `/api/assessment-test`. Use a separate output path (for example
+`npx ng build --configuration production --output-path /tmp/assessment-admin-production`)
+while the development watcher serves the normal dist folder. Do not interrupt another
+remote's local server. If switching from the old production watcher, restart the
+watch process once; the updated dev:bundle script then works normally.
 
-1. Add focused form-mapping tests with real raw values and nested questions; a cast
-   is not a conversion from data into Angular controls.
-2. Test choice editing/removal and answer membership, whitespace, duplicate choices,
-   question minimums and integer levels once the intended rules are agreed.
-3. Test failed delete retaining the row, load failure distinct from empty results,
-   save/fetch failure recovery and prevention of duplicate submissions.
-4. Test create/edit/back under the host mount, route-ID changes on reused wizard,
-   unsaved navigation protection and standalone shell composition.
-5. Check keyboard access and accessible names, narrow layouts, step navigation and
-   feedback preview. Use HTTP doubles for unit tests and disposable data for live checks.
-6. Build after runtime changes, verify federation exports/providers, and separately
-   validate auth/gateway behavior. Do not equate a successful build with CRUD success.
+Ten regression tests cover multi-question mapping, validation, stale answers,
+structural edits, failed delete/load/save, duplicate saves, step jumps, route reuse
+and unsaved work. Hosted Chrome checks verified list, editor, edit/save and return to
+`/assessment-tests`; standalone verified creation. Hosted catalog and question editor
+were checked at 390px with no horizontal overflow. Service tests cover actual deletion
+and persistence conflicts. Browser checks use isolated local data, not production data.
 
-## Current verification status
-
-Source was read for this Markdown migration. No package install, build, app test,
-browser flow or live API mutation was run. No source `.spec.ts` files exist, so there
-is no established passing unit suite. See [readiness](assessment-readiness.md) for
-specific observed defects and compatibility decisions. Documentation checks cover
-local links, copied template parity, Markdown-only scope and whitespace.
+Production builds and the test suite pass. Federation testing caught and fixed an
+implicit DestroyRef injection issue not exposed by standalone tests. External release
+still requires the matching service and production gateway/auth smoke checks.

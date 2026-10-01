@@ -12,7 +12,10 @@ import { MatIconModule } from '@angular/material/icon';
   template: `
     <div class="empty">
       <mat-icon>inbox</mat-icon>
-      <p>No assessment tests match your filter.</p>
+      <p>
+        No assessment tests yet. Create a test with questions, choices
+        and feedback.
+      </p>
       <button mat-flat-button color="primary" (click)="create.emit()">
         <mat-icon>add</mat-icon>
         Add your first test

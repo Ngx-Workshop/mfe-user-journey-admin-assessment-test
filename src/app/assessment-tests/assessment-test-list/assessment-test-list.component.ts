@@ -14,7 +14,10 @@ import {
 } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contracts';
-import { of } from 'rxjs';
+import { EMPTY } from 'rxjs';
+import { apiError } from '../../services/api-error';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DestroyRef } from '@angular/core';
 import { catchError, finalize } from 'rxjs/operators';
 import { AssessmentTestsApiService } from '../../services/assessment-tests-api.service';
 import { AssessmentTestListAccordionComponent } from './assessment-test-list-accordion.component';
@@ -47,11 +50,25 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
       ></ngx-assessment-test-list-filters>
 
       @if (loading()) {
-      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       }
 
+      @if (error()) {
+        <div role="alert">
+          <p>{{ error() }}</p>
+          <button
+            mat-stroked-button
+            (click)="reload()"
+            [disabled]="loading()"
+          >
+            Retry
+          </button>
+        </div>
+      }
       <ngx-assessment-test-list-accordion
         [tests]="filtered()"
+        [busy]="loading()"
+        (refresh)="reload()"
         [filteredCount]="filtered().length"
         [totalCount]="tests().length"
         [subjectFilter]="subjectFilter()"
@@ -60,10 +77,19 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
         (delete)="confirmDelete($event)"
       ></ngx-assessment-test-list-accordion>
 
-      @if (!loading() && filtered().length === 0) {
-      <ngx-assessment-test-list-empty-state
-        (create)="openCreate()"
-      ></ngx-assessment-test-list-empty-state>
+      @if (!loading() && !error() && filtered().length === 0) {
+        @if (tests().length) {
+          <div class="empty" role="status">
+            <p>No tests match these filters.</p>
+            <button mat-stroked-button (click)="clearFilters()">
+              Clear filters
+            </button>
+          </div>
+        } @else {
+          <ngx-assessment-test-list-empty-state
+            (create)="openCreate()"
+          ></ngx-assessment-test-list-empty-state>
+        }
       }
     </div>
 
@@ -96,6 +122,8 @@ export class AssessmentTestListComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  private readonly destroyRef = inject(DestroyRef);
+  readonly error = signal<string | null>(null);
   readonly tests = signal<AssessmentTestDto[]>([]);
   readonly loading = signal(false);
   readonly query = signal('');
@@ -136,24 +164,25 @@ export class AssessmentTestListComponent {
   }
 
   reload() {
+    if (this.loading()) return;
+    this.error.set(null);
     this.loading.set(true);
     this.api
       .list$()
       .pipe(
-        catchError((err) => {
-          this.snack.open(
-            'Failed to load assessment tests',
-            'Dismiss',
-            {
-              duration: 4000,
-            }
-          );
-          console.error(err);
-          return of([] as AssessmentTestDto[]);
-        }),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.loading.set(false))
       )
-      .subscribe((rows) => this.tests.set(rows));
+      .subscribe({
+        next: (rows) => this.tests.set(rows),
+        error: (error) =>
+          this.error.set(
+            apiError(
+              error,
+              'Could not load assessment tests. Please retry.'
+            )
+          ),
+      });
   }
 
   onLevelCapChange(value: number | null) {
@@ -186,19 +215,21 @@ export class AssessmentTestListComponent {
   }
 
   confirmDelete(test: AssessmentTestDto) {
+    if (this.loading()) return;
     const ok = confirm(`Delete "${test.name}"?`);
     if (!ok) return;
 
+    this.error.set(null);
     this.loading.set(true);
     this.api
       .delete$(test._id)
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         catchError((err) => {
-          this.snack.open('Failed to delete test', 'Dismiss', {
-            duration: 4000,
-          });
-          console.error(err);
-          return of(undefined);
+          this.error.set(
+            apiError(err, 'Could not delete this test. Please retry.')
+          );
+          return EMPTY;
         }),
         finalize(() => this.loading.set(false))
       )

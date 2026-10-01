@@ -1,5 +1,7 @@
 # Admin assessment readiness review and handoff
 
+> Historical migration snapshot. The runtime repairs and current verification are recorded in [001 reliable authoring](../specs/001-reliable-authoring/handoff.md). Read architecture/development for current behavior.
+
 Baseline: `acf3822`, reviewed 2026-09-30. Scope: codebase review and Markdown workflow
 migration. Findings below are source observations, not executed production failures.
 

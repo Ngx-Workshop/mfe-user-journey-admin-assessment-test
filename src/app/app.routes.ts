@@ -9,8 +9,22 @@ export const Routes: Route[] = [
     component: App,
     children: [
       { path: '', component: AssessmentTestListComponent },
-      { path: 'tests/new', component: AssessmentTestWizardComponent },
-      { path: 'tests/:id', component: AssessmentTestWizardComponent },
+      {
+        path: 'tests/new',
+        component: AssessmentTestWizardComponent,
+        canDeactivate: [
+          (component: AssessmentTestWizardComponent) =>
+            component.canLeave(),
+        ],
+      },
+      {
+        path: 'tests/:id',
+        component: AssessmentTestWizardComponent,
+        canDeactivate: [
+          (component: AssessmentTestWizardComponent) =>
+            component.canLeave(),
+        ],
+      },
     ],
   },
   { path: '**', redirectTo: '' },

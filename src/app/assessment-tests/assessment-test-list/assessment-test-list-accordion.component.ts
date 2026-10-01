@@ -1,4 +1,3 @@
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,6 +7,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contracts';
 
@@ -17,8 +17,9 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
     MatButtonModule,
     MatChipsModule,
     MatExpansionModule,
-    MatIconModule
-],
+    MatIconModule,
+    MatTooltipModule,
+  ],
   template: `
     <div class="results">
       <div class="results-header">
@@ -26,65 +27,85 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
           mat-icon-button
           matTooltip="Refresh list"
           aria-label="Refresh"
+          (click)="refresh.emit()"
+          [disabled]="busy()"
         >
           <mat-icon>refresh</mat-icon>
         </button>
         <h4>
           Results {{ filteredCount() }} of {{ totalCount() }}
-          @if (subjectFilter() !== 'ALL') { · Subject:
-          {{ subjectFilter() }} } @if (levelCap() !== null) { · Level
-          ≤
-          {{ levelCap() }}
+          @if (subjectFilter() !== 'ALL') {
+            · Subject: {{ subjectFilter() }}
+          }
+          @if (levelCap() !== null) {
+            · Level ≤
+            {{ levelCap() }}
           }
         </h4>
       </div>
 
       <mat-accordion class="list" hideToggle>
         @for (t of tests(); track t._id) {
-        <mat-expansion-panel>
-          <mat-expansion-panel-header>
-            <mat-panel-title>{{ t.name }}</mat-panel-title>
-            <mat-panel-description>
-              <mat-chip-set>
-                <mat-chip appearance="outlined"
-                  >Level {{ t.level }}</mat-chip
-                >
-                <mat-chip appearance="outlined" color="primary">{{
-                  t.subject
-                }}</mat-chip>
-              </mat-chip-set>
-            </mat-panel-description>
-
-            <div class="row">
-              <div class="row-actions">
-                <button mat-icon-button (click)="edit.emit(t)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button (click)="delete.emit(t)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>{{ t.name }}</mat-panel-title>
+              <mat-panel-description>
+                <mat-chip-set>
+                  <mat-chip appearance="outlined"
+                    >Level {{ t.level }}</mat-chip
+                  >
+                  <mat-chip appearance="outlined" color="primary">{{
+                    t.subject
+                  }}</mat-chip>
+                </mat-chip-set>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <div class="row-actions">
+              <button
+                mat-stroked-button
+                (click)="edit.emit(t)"
+                [disabled]="busy()"
+                [attr.aria-label]="'Edit ' + t.name"
+              >
+                <mat-icon>edit</mat-icon>Edit
+              </button>
+              <button
+                mat-stroked-button
+                (click)="delete.emit(t)"
+                [disabled]="busy()"
+                [attr.aria-label]="'Delete ' + t.name"
+              >
+                <mat-icon>delete</mat-icon>Delete
+              </button>
             </div>
-          </mat-expansion-panel-header>
 
-          @if (t.testQuestions.length) { @for (q of t.testQuestions;
-          track q.question) {
-          <div class="details">
-            <b>{{ q.question }}</b>
-            <ol class="upper-alpha">
-              @for (choices of q.choices; track $index) {
-              <li>
-                <span class="a">{{ choices.value }}</span>
-              </li>
+            @if (t.testQuestions.length) {
+              @for (q of t.testQuestions; track $index) {
+                <div class="details">
+                  <b>{{ q.question }}</b>
+                  <ol class="upper-alpha">
+                    @for (choices of q.choices; track $index) {
+                      <li>
+                        <span class="a">{{ choices.value }}</span>
+                      </li>
+                    }
+                  </ol>
+
+                  <span class="answer"
+                    >Answer: <i>{{ q.answer }}</i></span
+                  >
+                  <p>
+                    <strong>Correct feedback:</strong>
+                    {{ q.correctResponse }}
+                  </p>
+                  <p>
+                    <strong>Incorrect feedback:</strong>
+                    {{ q.incorrectResponse }}
+                  </p>
+                </div>
               }
-            </ol>
-
-            <span class="answer"
-              >Answer: <i>{{ q.answer }}</i></span
-            >
-          </div>
-          } }
-        </mat-expansion-panel>
+            }
+          </mat-expansion-panel>
         }
       </mat-accordion>
     </div>
@@ -92,13 +113,40 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   styles: [
     `
       @use '@angular/material' as mat;
+      .row-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0.5rem 0 1rem;
+      }
+      .details {
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+      @media (max-width: 600px) {
+        .results {
+          padding: 0.5rem !important;
+        }
+        mat-expansion-panel-header {
+          height: auto;
+          min-height: 64px;
+          padding: 0.75rem;
+        }
+        mat-panel-description {
+          flex: 0;
+          margin: 0;
+        }
+        mat-panel-title {
+          overflow-wrap: anywhere;
+        }
+      }
       .list {
         width: 100%;
         @include mat.expansion-overrides(
           (
             container-text-color: var(--mat-sys-on-surface),
-            container-background-color:
-              var(--mat-sys-surface-container-high),
+            container-background-color: var(
+                --mat-sys-surface-container-high
+              ),
           )
         );
       }
@@ -142,6 +190,8 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssessmentTestListAccordionComponent {
+  readonly busy = input(false);
+  readonly refresh = output<void>();
   readonly tests = input<AssessmentTestDto[]>([]);
   readonly filteredCount = input.required<number>();
   readonly totalCount = input.required<number>();

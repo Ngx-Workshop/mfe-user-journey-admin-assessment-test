@@ -1,5 +1,7 @@
 # Seed adoption status — administrator assessments
 
+> Historical migration snapshot. The runtime repairs and current verification are recorded in [001 reliable authoring](../specs/001-reliable-authoring/handoff.md). Read architecture/development for current behavior.
+
 The Markdown workflow is adopted from `seed-mfe-remote`. Workflow instructions and
 four templates are copied unchanged; the entry point, constitution and context are
 adapted to this repository. No historical Coding Labs feature records are copied.

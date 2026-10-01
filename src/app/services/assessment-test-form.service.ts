@@ -5,12 +5,31 @@ import {
   FormControl,
   FormGroup,
   Validators,
+  ValidatorFn,
 } from '@angular/forms';
 import {
   AssessmentTestDto,
   TestChoiceDto,
   TestQuestionDto,
 } from '@tmdjr/service-nestjs-assessment-test-contracts';
+
+const nonBlank: ValidatorFn = (control) =>
+  typeof control.value === 'string' && control.value.trim()
+    ? null
+    : { required: true };
+const integer: ValidatorFn = (control) =>
+  Number.isInteger(control.value) ? null : { integer: true };
+const validChoices: ValidatorFn = (control) => {
+  const q = control.getRawValue();
+  const choices: string[] = q.choices.map((value: string) =>
+    value.trim()
+  );
+  if (new Set(choices).size !== choices.length)
+    return { duplicateChoices: true };
+  return choices.includes(q.answer.trim())
+    ? null
+    : { answerChoice: true };
+};
 
 export type AssessmentSubject = AssessmentTestDto['subject'];
 
@@ -45,18 +64,18 @@ export class AssessmentTestFormService {
   ): AssessmentTestForm {
     return this.fb.group({
       name: this.fb.control(initial?.name ?? '', {
-        validators: [Validators.required, Validators.maxLength(160)],
+        validators: [nonBlank, Validators.maxLength(160)],
         nonNullable: true,
       }),
       subject: this.fb.control<AssessmentSubject>(
         initial?.subject ?? 'ANGULAR',
         {
-          validators: [Validators.required],
+          validators: [nonBlank],
           nonNullable: true,
         }
       ),
       level: this.fb.control(initial?.level ?? 1, {
-        validators: [Validators.required, Validators.min(1)],
+        validators: [Validators.required, Validators.min(1), integer],
         nonNullable: true,
       }),
       testQuestions: this.fb.array(
@@ -64,7 +83,7 @@ export class AssessmentTestFormService {
           ? initial.testQuestions
           : [this.buildDefaultQuestion()]
         ).map((q) => this.createQuestionGroup(q)),
-        { validators: [Validators.required] }
+        { validators: [Validators.required, Validators.minLength(1)] }
       ),
     });
   }
@@ -77,59 +96,60 @@ export class AssessmentTestFormService {
         ? initial.choices
         : this.buildDefaultChoices();
 
-    return this.fb.group({
-      question: this.fb.control(initial?.question ?? '', {
-        validators: [Validators.required, Validators.maxLength(1000)],
-        nonNullable: true,
-      }),
-      choices: this.fb.array(
-        choices.map((c) => this.createChoiceControl(c.value)),
-        {
-          validators: [Validators.minLength(2)],
-        }
-      ),
-      answer: this.fb.control(initial?.answer ?? '', {
-        validators: [Validators.required],
-        nonNullable: true,
-      }),
-      correctResponse: this.fb.control(
-        initial?.correctResponse ?? '',
-        {
-          validators: [
-            Validators.required,
-            Validators.maxLength(1000),
-          ],
+    return this.fb.group(
+      {
+        question: this.fb.control(initial?.question ?? '', {
+          validators: [nonBlank, Validators.maxLength(1000)],
           nonNullable: true,
-        }
-      ),
-      incorrectResponse: this.fb.control(
-        initial?.incorrectResponse ?? '',
-        {
-          validators: [
-            Validators.required,
-            Validators.maxLength(1000),
-          ],
+        }),
+        choices: this.fb.array(
+          choices.map((c) => this.createChoiceControl(c.value)),
+          {
+            validators: [Validators.minLength(2)],
+          }
+        ),
+        answer: this.fb.control(initial?.answer ?? '', {
+          validators: [nonBlank],
           nonNullable: true,
-        }
-      ),
-    });
+        }),
+        correctResponse: this.fb.control(
+          initial?.correctResponse ?? '',
+          {
+            validators: [nonBlank, Validators.maxLength(1000)],
+            nonNullable: true,
+          }
+        ),
+        incorrectResponse: this.fb.control(
+          initial?.incorrectResponse ?? '',
+          {
+            validators: [nonBlank, Validators.maxLength(1000)],
+            nonNullable: true,
+          }
+        ),
+      },
+      { validators: [validChoices] }
+    );
   }
 
   addQuestion(form: AssessmentTestForm) {
+    form.markAsDirty();
     form.controls.testQuestions.push(this.createQuestionGroup());
   }
 
   removeQuestion(form: AssessmentTestForm, index: number) {
     if (form.controls.testQuestions.length <= 1) return;
+    form.markAsDirty();
     form.controls.testQuestions.removeAt(index);
   }
 
   addChoice(question: FormGroup<TestQuestionForm>) {
+    question.markAsDirty();
     question.controls.choices.push(this.createChoiceControl(''));
   }
 
   removeChoice(question: FormGroup<TestQuestionForm>, index: number) {
     if (question.controls.choices.length <= 2) return;
+    question.markAsDirty();
     question.controls.choices.removeAt(index);
   }
 
@@ -140,32 +160,19 @@ export class AssessmentTestFormService {
       name: raw.name.trim(),
       subject: raw.subject,
       level: raw.level,
-      testQuestions: raw.testQuestions
-        .map((q) =>
-          this.toQuestionDto(q as unknown as TestQuestionForm)
-        )
-        .filter((q) => q.question.trim()),
+      testQuestions: raw.testQuestions.map((q) => ({
+        question: q.question.trim(),
+        choices: q.choices.map((value) => ({ value: value.trim() })),
+        answer: q.answer.trim(),
+        correctResponse: q.correctResponse.trim(),
+        incorrectResponse: q.incorrectResponse.trim(),
+      })),
     };
-  }
-
-  private toQuestionDto(q: TestQuestionForm): TestQuestionDto {
-    const base: TestQuestionDto = {
-      question: q.question.value.trim(),
-      choices: q.choices.controls
-        .map((c) => c.value.trim())
-        .filter((v) => Boolean(v))
-        .map<TestChoiceDto>((v) => ({ value: v })),
-      answer: q.answer.value.trim(),
-      correctResponse: q.correctResponse.value.trim(),
-      incorrectResponse: q.incorrectResponse.value.trim(),
-    };
-
-    return base;
   }
 
   private createChoiceControl(value = ''): FormControl<string> {
     return this.fb.control(value, {
-      validators: [Validators.required, Validators.maxLength(400)],
+      validators: [nonBlank, Validators.maxLength(400)],
       nonNullable: true,
     });
   }

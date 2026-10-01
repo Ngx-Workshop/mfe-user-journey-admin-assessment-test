@@ -1,4 +1,3 @@
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,8 +20,8 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatSelectModule
-],
+    MatSelectModule,
+  ],
   template: `
     <div class="filters">
       <div class="filter-row header">
@@ -40,14 +39,15 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
             [value]="query()"
             (input)="queryChange.emit($any($event.target).value)"
           />
-          @if(query()) {
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="queryChange.emit('')"
-          >
-            <mat-icon>close</mat-icon>
-          </button>
+          @if (query()) {
+            <button
+              mat-icon-button
+              matSuffix
+              aria-label="Clear search"
+              (click)="queryChange.emit('')"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
           }
         </mat-form-field>
 
@@ -76,14 +76,15 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
             [value]="levelCap() ?? ''"
             (input)="onLevelCapInput($any($event.target).value)"
           />
-          @if(levelCap() !== null) {
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="levelCapChange.emit(null)"
-          >
-            <mat-icon>close</mat-icon>
-          </button>
+          @if (levelCap() !== null) {
+            <button
+              mat-icon-button
+              matSuffix
+              aria-label="Clear maximum level"
+              (click)="levelCapChange.emit(null)"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
           }
         </mat-form-field>
 
@@ -103,6 +104,18 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   `,
   styles: [
     `
+      @media (max-width: 600px) {
+        .filters {
+          padding: 1rem !important;
+          margin-bottom: 0.5rem !important;
+        }
+        .filter-row .level,
+        .filter-row .sort,
+        .filter-row .subject {
+          flex: 1;
+          min-width: 120px;
+        }
+      }
       .filters {
         background: var(--mat-sys-surface-container-low);
         padding: 1.5rem;
