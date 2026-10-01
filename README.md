@@ -1,85 +1,32 @@
-# Assessment Tests<br><sup>MFE User Journey - Publisher</sup>
+# Admin assessment authoring
 
-<img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/angular-gradient-wordmark.gif?raw=true" height="132" alt="Angular Logo" /> <img src="https://github.com/Ngx-Workshop/.github/blob/main/readme-assets/module-federation-logo.svg?raw=true" height="132" style="max-width: 100%;height: 132px;" alt="Module Federation" />
+Angular micro-frontend for managing Ngx-Workshop assessment definitions. The source
+contains a filterable catalog and a Basics → Questions → Review create/edit wizard,
+using Angular Material, signals and typed reactive forms. It consumes
+`@tmdjr/service-nestjs-assessment-test-contracts` version `0.0.15`.
 
-Angular micro-frontend (remote) for the **Publisher Assessment Tests** user journey in the NGX Workshop ecosystem.
+The implementation has known save-mapping, deletion feedback and navigation/state
+gaps. Read [authoring readiness](docs/assessment-readiness.md) before assuming the
+current CRUD flow works end to end. “Publish” in wizard copy means no separate
+publication action: the client currently creates/updates mutable definitions.
 
-This project is an Angular Module Federation remote for the NGX Workshop “Admin Assessment Tests” experience. It exposes a standalone shell component and route configuration for host integration, and provides a full CRUD UI for assessment tests (list, filter, create, edit, delete) built with Angular Material, signals, and typed reactive forms.
+Start with [AGENTS.md](AGENTS.md), [architecture](docs/architecture.md),
+[development](docs/development.md), the [specification workflow](.specify/README.md)
+and [feature index](specs/README.md).
 
-Key capabilities:
+## Local commands
 
-- Assessment test list with filtering, sorting, and empty states.
-- Multi-step wizard for creating and editing tests with validation.
-- API integration for list/create/update/delete operations.
-- Module Federation exposure for both component and route integration.
+Use Node 22 and `npm ci`. `npm start` serves on port 4201.
+`npm run dev:bundle` combines a **production** watch build with a CORS-enabled static
+server on 4201. Check for an existing remote using that port first. Neither command
+configures the assessment API proxy; the client uses `api/assessment-test`, resolved
+against the document base URL.
 
-## Getting started
+`npm run build` outputs `dist/mfe-user-journey-admin-assessment-test`.
+`npm test -- --watch=false --browsers=ChromeHeadless` invokes Karma, but no source
+spec files are present in the reviewed baseline. A test script is not coverage.
 
-### Prerequisites
-
-- Node.js and npm
-- Angular CLI (optional, project uses local CLI)
-
-### Install dependencies
-
-- `npm install`
-
-### Run the remote locally
-
-- `npm start`
-
-This serves the remote with a Webpack Module Federation entry at /remoteEntry.js.
-
-### Run with the MF dev server (optional)
-
-- `npm run run:all`
-
-### Tests
-
-- `npm test`
-
-### Backend/API
-
-The UI expects the backend to be reachable at `/api/assessment-test` (see [src/app/services/assessment-tests-api.service.ts](src/app/services/assessment-tests-api.service.ts)). Configure the host or local dev server to proxy that path to your API.
-
-## Architectural overview
-
-### Module Federation
-
-- Remote name: `ngx-seed-mfe`
-- Remote entry: `remoteEntry.js`
-- Exposes:
-  - `./Component` → [src/app/app.ts](src/app/app.ts)
-  - `./Routes` → [src/app/app.routes.ts](src/app/app.routes.ts)
-
-See [webpack.config.js](webpack.config.js) for the federation configuration and shared library settings.
-
-### Bootstrapping
-
-- [src/main.ts](src/main.ts) dynamically imports [src/bootstrap.ts](src/bootstrap.ts).
-- [src/bootstrap.ts](src/bootstrap.ts) bootstraps the standalone `App` component with [src/app/app.config.ts](src/app/app.config.ts).
-- The app uses zoneless change detection and async animations (see [src/app/app.config.ts](src/app/app.config.ts)).
-
-### Routing
-
-Routes are defined in [src/app/app.routes.ts](src/app/app.routes.ts):
-
-- `/` → assessment test list
-- `/tests/new` → create wizard
-- `/tests/:id` → edit wizard
-
-### UI composition
-
-- App shell (header + action bar): [src/app/app.ts](src/app/app.ts)
-- List view and filters:
-  - [src/app/assessment-tests/assessment-test-list/assessment-test-list.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list.component.ts)
-  - [src/app/assessment-tests/assessment-test-list/assessment-test-list-filters.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list-filters.component.ts)
-  - [src/app/assessment-tests/assessment-test-list/assessment-test-list-accordion.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list-accordion.component.ts)
-  - [src/app/assessment-tests/assessment-test-list/assessment-test-list-empty-state.component.ts](src/app/assessment-tests/assessment-test-list/assessment-test-list-empty-state.component.ts)
-- Wizard (create/edit): [src/app/assessment-tests/assessment-test-wizard.component.ts](src/app/assessment-tests/assessment-test-wizard.component.ts)
-
-### Data flow
-
-- API access: [src/app/services/assessment-tests-api.service.ts](src/app/services/assessment-tests-api.service.ts)
-- Form creation and validation: [src/app/services/assessment-test-form.service.ts](src/app/services/assessment-test-form.service.ts)
-- State management uses Angular signals inside the components, with `OnPush` where appropriate.
+Federation currently retains the name `ngx-seed-mfe`, entry `remoteEntry.js`, and
+exposes `./Component` (default App) and `./Routes` (named Routes). Coordinate host
+registration before changing these identifiers. Pushes to main trigger production
+deployment. This documentation migration did not change or deploy runtime code.
