@@ -19,20 +19,34 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
     RouterLink,
   ],
   template: `
+    @if (editing()) {
     <ngx-particle-header>
       <h1>Assessment Tests</h1>
     </ngx-particle-header>
     <div class="action-bar">
-      @if (editing()) {
-        <a matButton="filled" [routerLink]="['.']"
-          ><mat-icon>arrow_back</mat-icon>All assessments</a
-        >
-      } @else {
-        <a matButton="filled" routerLink="/admin-dashboard"
-          ><mat-icon>arrow_back</mat-icon>Admin dashboard</a
-        >
-      }
+      <a matButton="filled" [routerLink]="['.']"
+        ><mat-icon>arrow_back</mat-icon>All assessments</a
+      >
     </div>
+    } @else {
+    <header class="header-background">
+      <div class="header-section">
+        <div class="header-headline">
+          <h1>Assessment-Tests</h1>
+          <h2>
+            Find, review and refine the tests in for learners'
+            learning journey.
+          </h2>
+        </div>
+        <div class="header-start">
+          <a matButton="elevated" [routerLink]="['tests', 'new']"
+            ><mat-icon>add</mat-icon>Create Assessment</a
+          >
+        </div>
+      </div>
+    </header>
+    }
+
     <div class="shell">
       <div class="container">
         <router-outlet></router-outlet>
@@ -49,7 +63,7 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         justify-content: center;
       }
       .container {
-        padding: 1rem;
+        padding: 28px 0 64px;
         flex: 0 1 clamp(480px, 70vw, 1400px);
         max-width: 100%;
         min-width: 0;
@@ -77,6 +91,71 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
           margin: 0 12px;
         }
       }
+      .header-background {
+        background-color: var(--mat-sys-primary);
+      }
+
+      .header-headline {
+        color: var(--mat-sys-secondary-container);
+      }
+
+      .header-start {
+        color: var(--mat-sys-primary-container);
+      }
+
+      .header-background {
+        overflow: hidden;
+        position: relative;
+        height: 420px;
+      }
+
+      .header-background::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="%23e3e3e3"><path d="M480-120 200-272v-240L40-600l440-240 440 240v320h-80v-276l-80 44v240L480-120Zm0-332 274-148-274-148-274 148 274 148Zm0 241 200-108v-151L480-360 280-470v151l200 108Zm0-241Zm0 90Zm0 0Z"/></svg>');
+        background-size: 400px;
+        background-repeat: no-repeat;
+        background-position: 75% 20px;
+        opacity: 0.4;
+      }
+
+      .header-section {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        text-align: center;
+        position: relative;
+      }
+
+      .header-headline {
+        h1 {
+          font-size: 7rem;
+          font-weight: bold;
+          line-height: 5.6rem;
+          margin: 15px 5px;
+        }
+
+        h2 {
+          font-size: 1.4rem;
+          font-weight: 100;
+          line-height: 28px;
+          margin: 15px 0 25px 0;
+        }
+      }
+
+      .header-start {
+        text-align: center;
+        margin: 15px 0 0 0;
+        .mat-mdc-raised-button {
+          font-size: 15px;
+        }
+      }
     `,
   ],
 })
@@ -91,12 +170,6 @@ export class App {
         ?.finalUrl?.toString()
         .includes('/tests/') ?? false
   );
-
-  openCreate() {
-    this.router.navigate(['tests', 'new'], {
-      relativeTo: this.route,
-    });
-  }
 }
 
 // 👇 **IMPORTANT FOR DYMANIC LOADING**

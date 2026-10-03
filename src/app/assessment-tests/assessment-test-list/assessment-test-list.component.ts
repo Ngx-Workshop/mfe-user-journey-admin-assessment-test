@@ -43,19 +43,6 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
       aria-labelledby="catalog-title"
       [attr.aria-busy]="loading()"
     >
-      <header class="catalog-header">
-        <div>
-          <p class="eyebrow">ASSESSMENT LIBRARY</p>
-          <h2 id="catalog-title">Your assessments</h2>
-          <p class="intro">
-            Find, review and refine the tests in your learning
-            journey.
-          </p>
-        </div>
-        <button mat-flat-button (click)="openCreate()">
-          <mat-icon>add</mat-icon>Create assessment
-        </button>
-      </header>
       <ngx-assessment-test-list-filters
         [query]="query()"
         [subjectFilter]="subjectFilter()"
@@ -163,7 +150,7 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
       .layout {
         display: grid;
         gap: 16px;
-        padding: 16px 0;
+        // padding: 16px 0;
       }
       .catalog-header {
         display: flex;
