@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -6,7 +11,13 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
 
 @Component({
   selector: 'ngx-seed-mfe',
-  imports: [RouterOutlet, NgxParticleHeader, MatIconModule, MatButtonModule, RouterLink],
+  imports: [
+    RouterOutlet,
+    NgxParticleHeader,
+    MatIconModule,
+    MatButtonModule,
+    RouterLink,
+  ],
   template: `
     @if (editing()) {
       <ngx-particle-header>
@@ -22,7 +33,10 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         <div class="assessment-shell__header-section">
           <div class="assessment-shell__header-headline">
             <h1>Assessment-Tests</h1>
-            <h2>Find, review and refine the tests in for learners' learning journey.</h2>
+            <h2>
+              Find, review and refine the tests in for learners'
+              learning journey.
+            </h2>
           </div>
           <div class="assessment-shell__header-start">
             <a matButton="elevated" [routerLink]="['tests', 'new']"
@@ -147,7 +161,11 @@ export class App {
   private readonly router = inject(Router);
 
   protected readonly editing = computed(
-    () => this.router.lastSuccessfulNavigation()?.finalUrl?.toString().includes('/tests/') ?? false
+    () =>
+      this.router
+        .lastSuccessfulNavigation()
+        ?.finalUrl?.toString()
+        .includes('/tests/') ?? false
   );
 }
 

@@ -1,7 +1,7 @@
 import { Route } from '@angular/router';
 import App from './app';
-import { AssessmentTestListComponent } from './assessment-tests/catalog/assessment-test-list.component';
-import { AssessmentTestWizardComponent } from './assessment-tests/wizard/assessment-test-wizard.component';
+import { AssessmentTestListComponent } from './features/assessment-tests/pages/catalog/assessment-test-list.component';
+import { AssessmentTestWizardComponent } from './features/assessment-tests/pages/wizard/assessment-test-wizard.component';
 
 export const Routes: Route[] = [
   {

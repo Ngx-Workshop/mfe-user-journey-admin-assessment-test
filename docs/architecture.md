@@ -10,16 +10,16 @@ asynchronous requests and lifetimes. No additional state framework is used.
 
 | Layer | Source | Responsibility |
 | --- | --- | --- |
-| Model | `models/assessment-test.ts` | DTO-derived subject and explicit create/update payload types; no forms, state or HTTP dependencies |
-| Data access | `services/assessment-tests-api.service.ts` | Stateless, cold HTTP observables; sole HttpClient consumer |
-| Singleton state | `state/assessment-catalog.store.ts` | Server catalog, pending/error state, refresh/delete orchestration and success-only row removal |
-| Singleton state | `state/assessment-editor.store.ts` | Current server definition/ID/version, load/save orchestration, pending/error state and mutation guards |
-| Local view model | `assessment-tests/catalog/assessment-catalog.view-model.ts` | Search/subject/level/sort, ten-row pagination, clamping and derived catalog rows |
-| Local view model | `assessment-tests/wizard/assessment-wizard.view-model.ts` | Unsaved typed form, steps, validation targets and ten-question review pages |
-| Local view model | `assessment-tests/question-workspace/question-workspace.view-model.ts` | Selection, outline filters/pages, structural edits and undo with stable FormGroup identity |
-| Form factory | `services/assessment-test-form.service.ts` | Stateless typed form creation, validators, structural operations and explicit raw-value payload mapping |
-| Journey orchestration | `assessment-tests/catalog/assessment-test-list.component.ts`, `assessment-tests/wizard/assessment-test-wizard.component.ts` | Store commands/subscriptions, route/navigation, confirmation, success feedback and unsaved guards |
-| Nested orchestration | `assessment-tests/question-workspace/question-workspace.component.ts` | Connects local workspace view model to outline, fields and toolbar; handles DOM focus and choice intents |
+| Model | `features/assessment-tests/models/assessment-test.ts` | DTO-derived subject and explicit create/update payload types; no forms, state or HTTP dependencies |
+| Data access | `features/assessment-tests/api/assessment-tests-api.service.ts` | Stateless, cold HTTP observables; sole HttpClient consumer |
+| Singleton state | `features/assessment-tests/state/assessment-catalog.store.ts` | Server catalog, pending/error state, refresh/delete orchestration and success-only row removal |
+| Singleton state | `features/assessment-tests/state/assessment-editor.store.ts` | Current server definition/ID/version, load/save orchestration, pending/error state and mutation guards |
+| Local view model | `features/assessment-tests/pages/catalog/assessment-catalog.view-model.ts` | Search/subject/level/sort, ten-row pagination, clamping and derived catalog rows |
+| Local view model | `features/assessment-tests/pages/wizard/assessment-wizard.view-model.ts` | Unsaved typed form, steps, validation targets and ten-question review pages |
+| Local view model | `features/assessment-tests/components/question-workspace/question-workspace.view-model.ts` | Selection, outline filters/pages, structural edits and undo with stable FormGroup identity |
+| Form factory | `features/assessment-tests/forms/assessment-test-form.service.ts` | Stateless typed form creation, validators, structural operations and explicit raw-value payload mapping |
+| Journey orchestration | `features/assessment-tests/pages/catalog/assessment-test-list.component.ts`, `features/assessment-tests/pages/wizard/assessment-test-wizard.component.ts` | Store commands/subscriptions, route/navigation, confirmation, success feedback and unsaved guards |
+| Nested orchestration | `features/assessment-tests/components/question-workspace/question-workspace.component.ts` | Connects local workspace view model to outline, fields and toolbar; handles DOM focus and choice intents |
 | Presentation | `assessment-catalog-view`, catalog filters/rows/empty state; wizard heading/controls/basics/review; question outline/actions/fields | Typed inputs and intent outputs; no data access, singleton-store injection, navigation or snackbars |
 
 All paths above are relative to `src/app`. Every component uses OnPush and owns
@@ -30,16 +30,12 @@ fragmenting a single responsibility. Do not externalize their HTML/SCSS to reduc
 
 ## Directory organization
 
-`src/app/assessment-tests` groups components and their local view models into
-`catalog/`, `wizard/` and `question-workspace/`. Shared model, service and singleton
-store boundaries remain under `src/app/models`, `src/app/services` and `src/app/state`.
-
-Specs live outside application source in a root `testing/` directory mirroring
-`src/`: catalog/workspace suites are under `testing/app/assessment-tests`, service
-suites under `testing/app/services`, and store suites under `testing/app/state`.
-The cross-journey authoring suite remains at the assessment feature root.
-There are no spec files under `src/`. The test target explicitly discovers the
-external specs; the production TypeScript configuration excludes `testing/`.
+Follow [the shared source convention](source-organization.md). All assessment code
+lives in `src/app/features/assessment-tests`: catalog and wizard views/models under
+`pages/`, the reusable question workspace under `components/`, HTTP under `api/`,
+form construction under `forms/`, stores under `state/`, types under `models/` and
+error helpers under `utils/`. Specs mirror these folders in `testing/app/features/assessment-tests`.
+There are no spec files under `src/`; the test target discovers the external tree.
 
 ## Data flow and lifetime
 
@@ -90,3 +86,11 @@ boundary. Pass DestroyRef explicitly to takeUntilDestroyed for federation compat
 The server rejects edits/deletions after learner attempts, duplicate subject/level
 and stale versions. Errors retain the draft. This refactor requires no backend,
 gateway, dependency, payload, federation or data-migration changes.
+
+## Uniform admin source layout — 2026-10-07
+
+Follow [the shared source convention](source-organization.md). Feature code lives
+under `src/app/features/assessment-tests`; page-only views/models stay beside their
+page, reusable views live under `components`, stateless adapters under `api`, and
+singleton orchestration under `state`. Tests mirror the responsibility folders.
+The app entry files and external integration contracts are preserved.

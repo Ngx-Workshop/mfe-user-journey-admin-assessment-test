@@ -81,8 +81,8 @@ They do not establish production gateway/auth behavior or mutate definitions.
 ## Test directory convention
 
 Keep specs in `testing/app/`, mirroring `src/app/` and its feature folders. For
-example, `src/app/assessment-tests/question-workspace/question-workspace.component.ts`
-is tested by `testing/app/assessment-tests/question-workspace/question-workspace.component.spec.ts`.
+example, `src/app/features/assessment-tests/components/question-workspace/question-workspace.component.ts`
+is tested by `testing/app/features/assessment-tests/components/question-workspace/question-workspace.component.spec.ts`.
 Tests import the application implementation; do not duplicate source in `testing/`.
 
 `tsconfig.spec.json` includes `testing/**/*.ts` and source declarations. The Karma
@@ -91,3 +91,16 @@ that pattern from `sourceRoot` (`src`). `tsconfig.app.json` explicitly excludes 
 external test tree. The usual full-suite command is unchanged; all six relocated
 spec files are discovered and all 33 tests pass. The production build also passes
 with the grouped component imports. This reorganization changes paths only.
+
+## Source organization parity — 2026-10-07
+
+See [source organization](source-organization.md). Run `npm run check:layout`,
+the full ChromeHeadless suite, and a production build after relocating files.
+Test include selectors now use `../testing/app/features/assessment-tests/`.
+
+Verified: 33 ChromeHeadless tests, application/spec TypeScript checks,
+layout checks and production compilation pass. Builds used isolated
+`/tmp/admin-layout-assessment-test-production` output, preserving watched bundles.
+All existing TypeScript files were compared against HEAD: only relative path
+strings changed. Hosted browser/service integration was not rerun for this
+mechanical reorganization.
