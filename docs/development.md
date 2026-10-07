@@ -56,3 +56,38 @@ and clamping, combined filtering/reset/no matches, and bounded previews for
 50-question definitions. Hosted local-service checks verified subject/search,
 preview, direct Edit and return. The list fits 320px without horizontal overflow.
 Production build passes without warnings. See [003 handoff](../specs/003-assessment-catalog/handoff.md).
+
+## MVVM refactor verification (2026-10-07)
+
+See [004 plan](../specs/004-mvvm-refactor/plan.md) and
+[handoff](../specs/004-mvvm-refactor/handoff.md) for the source audit and final evidence.
+The suite now includes 33 tests: the original 22 plus singleton state isolation,
+lazy requests, mutation suppression, cancellation cleanup, stale route-load
+protection, component destruction/re-entry, OnPush heading updates, rendered review
+pagination/edit navigation and HTTP method/URL/body compatibility.
+
+Use `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p tsconfig.app.json`
+for an additional source check. There is no repository lint target. Component
+HTML/SCSS must stay inline; component-owned class names follow BEM; components use
+OnPush. Put HTTP only in the adapter, server request state in root stores, and
+transient form/filter/workspace state in local view models. Presentation components
+consume inputs and emit intent. Store subscriptions belong to orchestration and
+must terminate on destroy; route-dependent reads use switchMap.
+
+Hosted checks use the running development bundle and local service fixtures.
+They do not establish production gateway/auth behavior or mutate definitions.
+
+
+## Test directory convention
+
+Keep specs in `testing/app/`, mirroring `src/app/` and its feature folders. For
+example, `src/app/assessment-tests/question-workspace/question-workspace.component.ts`
+is tested by `testing/app/assessment-tests/question-workspace/question-workspace.component.spec.ts`.
+Tests import the application implementation; do not duplicate source in `testing/`.
+
+`tsconfig.spec.json` includes `testing/**/*.ts` and source declarations. The Karma
+target's include pattern is `../testing/**/*.spec.ts`: the installed builder resolves
+that pattern from `sourceRoot` (`src`). `tsconfig.app.json` explicitly excludes the
+external test tree. The usual full-suite command is unchanged; all six relocated
+spec files are discovered and all 33 tests pass. The production build also passes
+with the grouped component imports. This reorganization changes paths only.

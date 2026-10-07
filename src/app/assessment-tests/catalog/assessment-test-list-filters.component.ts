@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,26 +8,15 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
 
 @Component({
   selector: 'ngx-assessment-test-list-filters',
-  imports: [
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-  ],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule],
   template: `
-    <div
-      class="filters"
-      role="search"
-      aria-label="Filter assessments"
-    >
+    <div class="assessment-filters__filters" role="search" aria-label="Filter assessments">
       <mat-form-field
         appearance="outline"
         subscriptSizing="dynamic"
-        class="search"
+        class="assessment-filters__search"
       >
-        <mat-label>Find an assessment</mat-label
-        ><mat-icon matPrefix>search</mat-icon>
+        <mat-label>Find an assessment</mat-label><mat-icon matPrefix>search</mat-icon>
         <input
           matInput
           placeholder="Name, subject or level"
@@ -40,14 +24,14 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
           (input)="queryChange.emit($any($event.target).value)"
         />
         @if (query()) {
-        <button
-          mat-icon-button
-          matSuffix
-          aria-label="Clear search"
-          (click)="queryChange.emit('')"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
+          <button
+            mat-icon-button
+            matSuffix
+            aria-label="Clear search"
+            (click)="queryChange.emit('')"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
         }
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic"
@@ -58,50 +42,36 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
         >
           <mat-option value="ALL">All subjects</mat-option
           ><mat-option value="ANGULAR">Angular</mat-option
-          ><mat-option value="NESTJS">NestJS</mat-option
-          ><mat-option value="RXJS">RxJS</mat-option>
+          ><mat-option value="NESTJS">NestJS</mat-option><mat-option value="RXJS">RxJS</mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic"
         ><mat-label>Maximum level</mat-label>
         <mat-select
           [value]="levelCap() ?? 'ALL'"
-          (selectionChange)="
-            levelCapChange.emit(
-              $event.value === 'ALL' ? null : $event.value
-            )
-          "
+          (selectionChange)="levelCapChange.emit($event.value === 'ALL' ? null : $event.value)"
         >
           <mat-option value="ALL">Any level</mat-option>
           @for (level of levels(); track level) {
-          <mat-option [value]="level"
-            >Level {{ level }} or below</mat-option
-          >
+            <mat-option [value]="level">Level {{ level }} or below</mat-option>
           }
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic"
         ><mat-label>Sort by</mat-label>
-        <mat-select
-          [value]="sort()"
-          (selectionChange)="sortChange.emit($event.value)"
+        <mat-select [value]="sort()" (selectionChange)="sortChange.emit($event.value)"
           ><mat-option value="updated">Recently updated</mat-option
           ><mat-option value="name">Name A–Z</mat-option
-          ><mat-option value="level"
-            >Highest level</mat-option
-          ></mat-select
+          ><mat-option value="level">Highest level</mat-option></mat-select
         >
       </mat-form-field>
     </div>
   `,
   styles: [
     `
-      .filters {
+      .assessment-filters__filters {
         display: grid;
-        grid-template-columns: minmax(200px, 2fr) repeat(
-            3,
-            minmax(155px, 1fr)
-          );
+        grid-template-columns: minmax(200px, 2fr) repeat(3, minmax(155px, 1fr));
         gap: 12px;
         padding: 20px;
         border-radius: 16px;
@@ -113,12 +83,12 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
         min-width: 0;
       }
       @media (max-width: 1100px) {
-        .filters {
+        .assessment-filters__filters {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
       @media (max-width: 600px) {
-        .filters {
+        .assessment-filters__filters {
           grid-template-columns: minmax(0, 1fr);
           padding: 16px;
         }
@@ -130,16 +100,12 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
 export class AssessmentTestListFiltersComponent {
   readonly levels = input<number[]>([]);
   readonly query = input('');
-  readonly subjectFilter = input<
-    AssessmentTestDto['subject'] | 'ALL'
-  >('ALL');
+  readonly subjectFilter = input<AssessmentTestDto['subject'] | 'ALL'>('ALL');
   readonly levelCap = input<number | null>(null);
   readonly sort = input<'updated' | 'name' | 'level'>('updated');
 
   readonly queryChange = output<string>();
-  readonly subjectFilterChange = output<
-    AssessmentTestDto['subject'] | 'ALL'
-  >();
+  readonly subjectFilterChange = output<AssessmentTestDto['subject'] | 'ALL'>();
   readonly levelCapChange = output<number | null>();
   readonly sortChange = output<'updated' | 'name' | 'level'>();
 }

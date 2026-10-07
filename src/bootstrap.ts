@@ -1,10 +1,11 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 @Component({
   selector: 'ngx-seed-mfe',
   imports: [RouterOutlet],
   template: '<router-outlet />',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class StandaloneRoot {}
 import { appConfig } from './app/app.config';

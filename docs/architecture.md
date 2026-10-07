@@ -1,67 +1,92 @@
 # Architecture — administrator assessment authoring
 
-Updated for [002 scalable wizard](../specs/002-question-workspace/spec.md).
+Updated 2026-10-07 for [004 MVVM refactor](../specs/004-mvvm-refactor/spec.md).
 
-Angular standalone, zoneless remote for catalog filtering and a three-step definition
-wizard. Learner attempts and scoring remain service-owned. No publication lifecycle
-is implied: the wizard saves definitions directly.
+Angular 21.1 standalone, zoneless remote for catalog filtering and a three-step
+assessment-definition wizard. Signals expose synchronous view state; RxJS controls
+asynchronous requests and lifetimes. No additional state framework is used.
 
-## Source and behavior
+## Ownership and source map
 
-- `app.ts` is the federation route shell with the shared header, bounded body wrapper,
-  stable dashboard/catalog navigation. The catalog owns its create action.
-- `bootstrap.ts` uses a separate RouterOutlet-only standalone root to avoid nesting
-  the shell twice. Default App export, Routes export and federation identity remain.
-- `app.routes.ts`: catalog at empty path; `tests/new` and `tests/:id` use the wizard
-  with an unsaved-change guard. Navigation remains inside the mounted remote.
-- `assessment-test-form.service.ts`: typed controls and direct raw-value mapping.
-  Requires trimmed nonblank text, integer level, distinct choices and answer membership.
-  Structural edits mark dirty; at least one question and two choices remain.
-- Catalog components distinguish loading/error/empty/no matches, wire refresh and
-  show compact rows with direct Edit and a secondary Delete menu. Failed deletion retains rows.
-  Search/subject/maximum-level/sort controls reset ten-row pagination; refresh/deletion
-  clamps the current page. Native details preview at most three question prompts per row.
-  Maximum-level options derive from catalog data. Dates use the existing lastUpdated field.
-- Wizard observes route parameters, cancels obsolete loads, guards pending saves,
-  retains failed edits, offers load retry, validates skipped steps and previews feedback.
-  Pending/failed loading disables the editor; navigation/reload protects unsaved work.
-- `assessment-tests-api.service.ts` owns requests; `api-error.ts` translates HTTP errors.
+| Layer | Source | Responsibility |
+| --- | --- | --- |
+| Model | `models/assessment-test.ts` | DTO-derived subject and explicit create/update payload types; no forms, state or HTTP dependencies |
+| Data access | `services/assessment-tests-api.service.ts` | Stateless, cold HTTP observables; sole HttpClient consumer |
+| Singleton state | `state/assessment-catalog.store.ts` | Server catalog, pending/error state, refresh/delete orchestration and success-only row removal |
+| Singleton state | `state/assessment-editor.store.ts` | Current server definition/ID/version, load/save orchestration, pending/error state and mutation guards |
+| Local view model | `assessment-tests/catalog/assessment-catalog.view-model.ts` | Search/subject/level/sort, ten-row pagination, clamping and derived catalog rows |
+| Local view model | `assessment-tests/wizard/assessment-wizard.view-model.ts` | Unsaved typed form, steps, validation targets and ten-question review pages |
+| Local view model | `assessment-tests/question-workspace/question-workspace.view-model.ts` | Selection, outline filters/pages, structural edits and undo with stable FormGroup identity |
+| Form factory | `services/assessment-test-form.service.ts` | Stateless typed form creation, validators, structural operations and explicit raw-value payload mapping |
+| Journey orchestration | `assessment-tests/catalog/assessment-test-list.component.ts`, `assessment-tests/wizard/assessment-test-wizard.component.ts` | Store commands/subscriptions, route/navigation, confirmation, success feedback and unsaved guards |
+| Nested orchestration | `assessment-tests/question-workspace/question-workspace.component.ts` | Connects local workspace view model to outline, fields and toolbar; handles DOM focus and choice intents |
+| Presentation | `assessment-catalog-view`, catalog filters/rows/empty state; wizard heading/controls/basics/review; question outline/actions/fields | Typed inputs and intent outputs; no data access, singleton-store injection, navigation or snackbars |
 
-## API and integration
+All paths above are relative to `src/app`. Every component uses OnPush and owns
+inline HTML/SCSS. Owned classes use component-specific BEM blocks/elements/modifiers.
+The outline and workspace are modest exceptions to the approximate 230-line target:
+keeping their cohesive accessible markup and responsive styles together avoids
+fragmenting a single responsibility. Do not externalize their HTML/SCSS to reduce size.
 
-Published response types remain `@tmdjr/service-nestjs-assessment-test-contracts` 0.0.15.
-Input payloads are explicitly mapped and compatible with the regenerated producer
-DTOs. PATCH includes `_id` and `__v` from GET. DELETE uses `/:id`, avoiding a raw string
-body. The producer must be upgraded before the consumer uses these changes.
+## Directory organization
 
-Production `environment.ts` uses `/api/assessment-test`; the development replacement
-uses `http://localhost:3005/assessment-test`. `dev:bundle` now builds development assets.
-Do not publish a development bundle. Production builds retain the gateway path and
-contain no local API address. Host authentication is independent of the isolated local
-service identity.
+`src/app/assessment-tests` groups components and their local view models into
+`catalog/`, `wizard/` and `question-workspace/`. Shared model, service and singleton
+store boundaries remain under `src/app/models`, `src/app/services` and `src/app/state`.
 
-Pass the injected DestroyRef explicitly to `takeUntilDestroyed`; hosted testing exposed
-an injection-context mismatch when relying on its implicit injection through federation.
-The shell supplies the theme and authentication. Standalone rendering is useful for
-functional checks; hosted rendering is the visual integration boundary.
+Specs live outside application source in a root `testing/` directory mirroring
+`src/`: catalog/workspace suites are under `testing/app/assessment-tests`, service
+suites under `testing/app/services`, and store suites under `testing/app/state`.
+The cross-journey authoring suite remains at the assessment feature root.
+There are no spec files under `src/`. The test target explicitly discovers the
+external specs; the production TypeScript configuration excludes `testing/`.
 
-Service policy: tests referenced by learner attempts cannot be edited/deleted;
-subject/level duplicates and stale versions return conflicts. The editor communicates
-this restriction and preserves form data on a rejected save. Learner taking/scoring
-and production data migration are outside this remote's scope.
+## Data flow and lifetime
 
-## Large assessments
+Components never inject the HTTP adapter. Stores expose readonly computed signals
+backed by private writable state. Store operation observables are lazy: subscribing
+starts a request, and finalize clears pending state on completion, failure or
+cancellation. A failed operation completes without a success emission, preserving
+catalog rows or unsaved edits. Guards in the stores suppress concurrent mutations;
+components disable conflicting interactions as a user experience measure.
 
-`question-workspace.component` owns the question outline and focused editor; the
-parent retains HTTP, route and save ownership. The outline searches the whole array
-and shows 12 entries per page, with ready/incomplete status and filtering. Exactly
-one question form is mounted. Stable FormGroup identity preserves selection and
-answer/feedback associations during moves. Reordering supports adjacent movement
-and direct position entry. Duplicates get independent controls. A single removed
-question can be restored until the workspace is left or another question is removed.
+Stores are root-provided; one mounted editor journey owns the current editor
+session. Forms, step state, filters, outline selection and undo are instantiated
+locally and are not cached in singleton state. Catalog state can survive navigation;
+returning to the catalog refreshes it. The wizard merges distinct route IDs and
+explicit retry intent, then switchMaps to the editor store: obsolete loads are
+unsubscribed before a new session starts. Store subscriptions are terminated with
+an explicitly injected DestroyRef when the orchestrator is destroyed. The workspace
+bridges merged form value/status streams into computed outline snapshots with an
+effect-owned subscription, cleaned up when the form changes or the workspace is
+destroyed. This bridge stays in the shared Angular core context: interop helpers
+resolved a duplicate core instance in hosted testing (NG0203/NG0201).
 
-The wizard sends review validation to the first invalid question and uses 10 native
-expandable review summaries per page. Edit links return to the underlying control.
-Review tracks absolute positions, avoiding re-creation of details on every change
-detection. Pending-save, errors, unsaved navigation and the API payload are unchanged.
-Templates and theme-aware styles now live beside their component source files.
+The wizard guards unsaved navigation and browser reload, prevents pending saves
+from leaving, validates skipped steps, and targets the first invalid question.
+The heading receives primitive name/dirty inputs so changes in a separate OnPush
+form child update it. Review receives raw display values, not mutable form controls.
+Review maps only the current ten controls; the outline shows twelve questions and
+only the selected question mounts a form. Duplication uses independent controls;
+movement and one-level removal undo preserve identity and answer associations.
+
+## Shell and compatibility
+
+`app.ts` remains the federation route shell with header/catalog navigation.
+`bootstrap.ts` keeps its RouterOutlet-only standalone root. Default `App`, exported
+`Routes`, `remoteEntry.js`, exposures and shared dependency versions are preserved.
+The empty child route is the catalog; `tests/new` and `tests/:id` mount the guarded
+wizard. Learner attempts and scoring remain service-owned. The wizard saves mutable
+definitions directly; no publication lifecycle is implied.
+
+Published contract package: `@tmdjr/service-nestjs-assessment-test-contracts` 0.0.18
+(as installed in this checkout). Payloads remain explicitly mapped. PATCH goes to
+the collection URL and includes route `_id` and the loaded `__v`. DELETE uses `/:id`.
+Production uses `/api/assessment-test`; development replacement uses
+`http://localhost:3005/assessment-test`. Do not publish development assets. The shell
+supplies theme and authentication; hosted rendering remains the visual integration
+boundary. Pass DestroyRef explicitly to takeUntilDestroyed for federation compatibility.
+
+The server rejects edits/deletions after learner attempts, duplicate subject/level
+and stale versions. Errors retain the draft. This refactor requires no backend,
+gateway, dependency, payload, federation or data-migration changes.

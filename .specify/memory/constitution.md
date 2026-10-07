@@ -1,9 +1,9 @@
 # Constitution — Admin assessment authoring
 
-Version: 1.0.0 · Adopted: 2026-09-30
+Version: 1.1.0 · Adopted: 2026-09-30 · Updated: 2026-10-07
 
 These are design requirements for future work, not a claim that every inherited
-inherited implementation already satisfies them. Current gaps live in the development guide.
+implementation already satisfies them. Current gaps live in the development guide.
 
 ## 1. One remote, one responsibility
 
@@ -28,6 +28,21 @@ typed reactive forms, signals for local state, and RxJS for asynchronous flows.
 Prefer focused components and services; use `OnPush` where appropriate. Avoid
 introducing another state framework or weakening types without a demonstrated need.
 Keep Angular and federation shared versions aligned with the consuming shell.
+
+
+Use MVVM: keep the HTTP adapter stateless and separate from root-provided stores
+that own server data and request orchestration. Keep unsaved forms, filters and
+selection in local view models. Journey orchestration coordinates stores and
+navigation; presentation receives typed inputs and emits intent. Nested
+orchestration components are appropriate for a cohesive workspace.
+Use switchMap for replaceable reads and terminate subscriptions on destroy.
+Components own inline HTML and SCSS with BEM class names. Aim for approximately
+230 lines per component, allowing modest exceptions for cohesive markup/styles.
+Use OnPush and verify reactive updates across presentation boundaries.
+
+Group assessment components and their view models by responsibility (`catalog`,
+`wizard`, `question-workspace`). Keep specs outside production source under a root
+`testing/` tree mirroring `src/`, with discovery configured explicitly.
 
 ## 4. Put data ownership on the server
 
@@ -57,3 +72,8 @@ feature folder. Distinguish assumptions, source observations, and verified resul
 Change these principles intentionally with a rationale and version/date update.
 Review affected architecture docs and templates at the same time. A justified
 feature-specific exception belongs in its plan, with impact and follow-up stated.
+
+
+2026-10-07 (1.1.0): Adopted the user's MVVM, singleton-state/data-access separation,
+inline template/SCSS, BEM and approximate component-size standards. This makes the
+architecture requirements durable for subsequent work.

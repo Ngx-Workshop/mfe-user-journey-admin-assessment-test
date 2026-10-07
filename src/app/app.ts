@@ -1,68 +1,52 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import {
-  ActivatedRoute,
-  Router,
-  RouterLink,
-  RouterOutlet,
-} from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
 
 @Component({
   selector: 'ngx-seed-mfe',
-  imports: [
-    RouterOutlet,
-    NgxParticleHeader,
-    MatIconModule,
-    MatButtonModule,
-    RouterLink,
-  ],
+  imports: [RouterOutlet, NgxParticleHeader, MatIconModule, MatButtonModule, RouterLink],
   template: `
     @if (editing()) {
-    <ngx-particle-header>
-      <h1>Assessment Tests</h1>
-    </ngx-particle-header>
-    <div class="action-bar">
-      <a matButton="filled" [routerLink]="['.']"
-        ><mat-icon>arrow_back</mat-icon>All assessments</a
-      >
-    </div>
-    } @else {
-    <header class="header-background">
-      <div class="header-section">
-        <div class="header-headline">
-          <h1>Assessment-Tests</h1>
-          <h2>
-            Find, review and refine the tests in for learners'
-            learning journey.
-          </h2>
-        </div>
-        <div class="header-start">
-          <a matButton="elevated" [routerLink]="['tests', 'new']"
-            ><mat-icon>add</mat-icon>Create Assessment</a
-          >
-        </div>
+      <ngx-particle-header>
+        <h1>Assessment Tests</h1>
+      </ngx-particle-header>
+      <div class="assessment-shell__action-bar">
+        <a matButton="filled" [routerLink]="['.']"
+          ><mat-icon>arrow_back</mat-icon>All assessments</a
+        >
       </div>
-    </header>
+    } @else {
+      <header class="assessment-shell__header-background">
+        <div class="assessment-shell__header-section">
+          <div class="assessment-shell__header-headline">
+            <h1>Assessment-Tests</h1>
+            <h2>Find, review and refine the tests in for learners' learning journey.</h2>
+          </div>
+          <div class="assessment-shell__header-start">
+            <a matButton="elevated" [routerLink]="['tests', 'new']"
+              ><mat-icon>add</mat-icon>Create Assessment</a
+            >
+          </div>
+        </div>
+      </header>
     }
 
-    <div class="shell">
-      <div class="container">
+    <div class="assessment-shell__shell">
+      <div class="assessment-shell__container">
         <router-outlet></router-outlet>
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
-      .flex-spacer {
-        flex: 1;
-      }
-      .shell {
+      .assessment-shell__shell {
         display: flex;
         justify-content: center;
       }
-      .container {
+      .assessment-shell__container {
         padding: 28px 0 64px;
         flex: 0 1 clamp(480px, 70vw, 1400px);
         max-width: 100%;
@@ -74,7 +58,7 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         font-weight: 100;
         margin: 1.7rem 1rem;
       }
-      .action-bar {
+      .assessment-shell__action-bar {
         position: sticky;
         top: 56px;
         height: 56px;
@@ -91,25 +75,25 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
           margin: 0 12px;
         }
       }
-      .header-background {
+      .assessment-shell__header-background {
         background-color: var(--mat-sys-primary);
       }
 
-      .header-headline {
+      .assessment-shell__header-headline {
         color: var(--mat-sys-secondary-container);
       }
 
-      .header-start {
+      .assessment-shell__header-start {
         color: var(--mat-sys-primary-container);
       }
 
-      .header-background {
+      .assessment-shell__header-background {
         overflow: hidden;
         position: relative;
         height: 420px;
       }
 
-      .header-background::before {
+      .assessment-shell__header-background::before {
         content: '';
         position: absolute;
         top: 0;
@@ -123,7 +107,7 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         opacity: 0.4;
       }
 
-      .header-section {
+      .assessment-shell__header-section {
         display: flex;
         justify-content: center;
         flex-direction: column;
@@ -133,7 +117,7 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         position: relative;
       }
 
-      .header-headline {
+      .assessment-shell__header-headline {
         h1 {
           font-size: 7rem;
           font-weight: bold;
@@ -149,7 +133,7 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
         }
       }
 
-      .header-start {
+      .assessment-shell__header-start {
         text-align: center;
         margin: 15px 0 0 0;
         .mat-mdc-raised-button {
@@ -161,14 +145,9 @@ import { NgxParticleHeader } from '@tmdjr/ngx-shared-headers';
 })
 export class App {
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
   protected readonly editing = computed(
-    () =>
-      this.router
-        .lastSuccessfulNavigation()
-        ?.finalUrl?.toString()
-        .includes('/tests/') ?? false
+    () => this.router.lastSuccessfulNavigation()?.finalUrl?.toString().includes('/tests/') ?? false
   );
 }
 

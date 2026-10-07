@@ -3,13 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contracts';
 import { Observable } from 'rxjs';
-import { AssessmentTestPayload } from './assessment-test-form.service';
-
-export type CreateAssessmentTestPayload = AssessmentTestPayload;
-export type UpdateAssessmentTestPayload = AssessmentTestPayload & {
-  _id: string;
-  __v: number;
-};
+import {
+  CreateAssessmentTestPayload,
+  UpdateAssessmentTestPayload,
+} from '../models/assessment-test';
+export type {
+  CreateAssessmentTestPayload,
+  UpdateAssessmentTestPayload,
+} from '../models/assessment-test';
 
 @Injectable({ providedIn: 'root' })
 export class AssessmentTestsApiService {
@@ -24,15 +25,11 @@ export class AssessmentTestsApiService {
     return this.http.get<AssessmentTestDto>(`${this.baseUrl}/${id}`);
   }
 
-  create$(
-    payload: CreateAssessmentTestPayload
-  ): Observable<AssessmentTestDto> {
+  create$(payload: CreateAssessmentTestPayload): Observable<AssessmentTestDto> {
     return this.http.post<AssessmentTestDto>(this.baseUrl, payload);
   }
 
-  update$(
-    payload: UpdateAssessmentTestPayload
-  ): Observable<AssessmentTestDto> {
+  update$(payload: UpdateAssessmentTestPayload): Observable<AssessmentTestDto> {
     return this.http.patch<AssessmentTestDto>(this.baseUrl, payload);
   }
 

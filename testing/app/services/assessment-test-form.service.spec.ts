@@ -1,5 +1,5 @@
 import { FormBuilder } from '@angular/forms';
-import { AssessmentTestFormService } from './assessment-test-form.service';
+import { AssessmentTestFormService } from '../../../src/app/services/assessment-test-form.service';
 
 describe('assessment authoring form', () => {
   const service = new AssessmentTestFormService(new FormBuilder());

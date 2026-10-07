@@ -13,25 +13,20 @@ import {
   TestQuestionDto,
 } from '@tmdjr/service-nestjs-assessment-test-contracts';
 
+import { AssessmentSubject, AssessmentTestPayload } from '../models/assessment-test';
+
 const nonBlank: ValidatorFn = (control) =>
-  typeof control.value === 'string' && control.value.trim()
-    ? null
-    : { required: true };
+  typeof control.value === 'string' && control.value.trim() ? null : { required: true };
 const integer: ValidatorFn = (control) =>
   Number.isInteger(control.value) ? null : { integer: true };
 const validChoices: ValidatorFn = (control) => {
   const q = control.getRawValue();
-  const choices: string[] = q.choices.map((value: string) =>
-    value.trim()
-  );
-  if (new Set(choices).size !== choices.length)
-    return { duplicateChoices: true };
-  return choices.includes(q.answer.trim())
-    ? null
-    : { answerChoice: true };
+  const choices: string[] = q.choices.map((value: string) => value.trim());
+  if (new Set(choices).size !== choices.length) return { duplicateChoices: true };
+  return choices.includes(q.answer.trim()) ? null : { answerChoice: true };
 };
 
-export type AssessmentSubject = AssessmentTestDto['subject'];
+export type { AssessmentSubject, AssessmentTestPayload } from '../models/assessment-test';
 
 export type TestQuestionForm = {
   question: FormControl<string>;
@@ -48,32 +43,20 @@ export type AssessmentTestForm = FormGroup<{
   testQuestions: FormArray<FormGroup<TestQuestionForm>>;
 }>;
 
-export type AssessmentTestPayload = {
-  name: string;
-  subject: AssessmentSubject;
-  level: number;
-  testQuestions: TestQuestionDto[];
-};
-
 @Injectable({ providedIn: 'root' })
 export class AssessmentTestFormService {
   constructor(private readonly fb: FormBuilder) {}
 
-  createForm(
-    initial?: Partial<AssessmentTestDto>
-  ): AssessmentTestForm {
+  createForm(initial?: Partial<AssessmentTestDto>): AssessmentTestForm {
     return this.fb.group({
       name: this.fb.control(initial?.name ?? '', {
         validators: [nonBlank, Validators.maxLength(160)],
         nonNullable: true,
       }),
-      subject: this.fb.control<AssessmentSubject>(
-        initial?.subject ?? 'ANGULAR',
-        {
-          validators: [nonBlank],
-          nonNullable: true,
-        }
-      ),
+      subject: this.fb.control<AssessmentSubject>(initial?.subject ?? 'ANGULAR', {
+        validators: [nonBlank],
+        nonNullable: true,
+      }),
       level: this.fb.control(initial?.level ?? 1, {
         validators: [Validators.required, Validators.min(1), integer],
         nonNullable: true,
@@ -88,9 +71,7 @@ export class AssessmentTestFormService {
     });
   }
 
-  createQuestionGroup(
-    initial?: Partial<TestQuestionDto>
-  ): FormGroup<TestQuestionForm> {
+  createQuestionGroup(initial?: Partial<TestQuestionDto>): FormGroup<TestQuestionForm> {
     const choices =
       initial?.choices?.length && initial.choices.length > 0
         ? initial.choices
@@ -112,20 +93,14 @@ export class AssessmentTestFormService {
           validators: [nonBlank],
           nonNullable: true,
         }),
-        correctResponse: this.fb.control(
-          initial?.correctResponse ?? '',
-          {
-            validators: [nonBlank, Validators.maxLength(1000)],
-            nonNullable: true,
-          }
-        ),
-        incorrectResponse: this.fb.control(
-          initial?.incorrectResponse ?? '',
-          {
-            validators: [nonBlank, Validators.maxLength(1000)],
-            nonNullable: true,
-          }
-        ),
+        correctResponse: this.fb.control(initial?.correctResponse ?? '', {
+          validators: [nonBlank, Validators.maxLength(1000)],
+          nonNullable: true,
+        }),
+        incorrectResponse: this.fb.control(initial?.incorrectResponse ?? '', {
+          validators: [nonBlank, Validators.maxLength(1000)],
+          nonNullable: true,
+        }),
       },
       { validators: [validChoices] }
     );

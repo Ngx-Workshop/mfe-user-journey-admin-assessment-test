@@ -1,52 +1,19 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { computed, effect, Signal, signal, untracked } from '@angular/core';
+import { map, merge, startWith } from 'rxjs';
+import { FormGroup } from '@angular/forms';
 import {
   AssessmentTestForm,
   AssessmentTestFormService,
   TestQuestionForm,
-} from '../services/assessment-test-form.service';
+} from '../../services/assessment-test-form.service';
+export type Question = FormGroup<TestQuestionForm>;
 
-type Question = FormGroup<TestQuestionForm>;
-
-@Component({
-  selector: 'ngx-question-workspace',
-  imports: [
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-  ],
-  templateUrl: './question-workspace.component.html',
-  styleUrl: './question-workspace.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class QuestionWorkspaceComponent {
-  readonly form = input.required<AssessmentTestForm>();
-  readonly requestedQuestion = input<Question | null>(null);
-  readonly selectionChange = output<Question>();
-  private readonly forms = inject(AssessmentTestFormService);
-  private readonly heading =
-    viewChild<ElementRef<HTMLElement>>('editorHeading');
-  private readonly revision = signal(0);
+/** Per-workspace selection, filtering and structural edits preserve control identity. */
+export class QuestionWorkspaceViewModel {
+  private readonly questionSnapshot = signal<{
+    form: AssessmentTestForm;
+    questions: Question[];
+  } | null>(null);
   readonly selected = signal<Question | null>(null);
   readonly search = signal('');
   readonly incompleteOnly = signal(false);
@@ -67,15 +34,12 @@ export class QuestionWorkspaceComponent {
   } | null>(null);
   readonly announcement = signal('');
   readonly questions = computed(() => {
-    this.revision();
-    return [...this.form().controls.testQuestions.controls];
+    const form = this.form();
+    const snapshot = this.questionSnapshot();
+    return snapshot?.form === form ? snapshot.questions : [...form.controls.testQuestions.controls];
   });
-  readonly selectedIndex = computed(() =>
-    this.questions().indexOf(this.selected()!)
-  );
-  readonly completeCount = computed(
-    () => this.questions().filter((q) => q.valid).length
-  );
+  readonly selectedIndex = computed(() => this.questions().indexOf(this.selected()!));
+  readonly completeCount = computed(() => this.questions().filter((q) => q.valid).length);
   readonly matches = computed(() => {
     const term = this.search().trim().toLowerCase();
     return this.questions()
@@ -83,18 +47,13 @@ export class QuestionWorkspaceComponent {
       .filter(
         ({ question, index }) =>
           (!this.incompleteOnly() || question.invalid) &&
-          (!term ||
-            `${index + 1} ${question.controls.question.value}`
-              .toLowerCase()
-              .includes(term))
+          (!term || `${index + 1} ${question.controls.question.value}`.toLowerCase().includes(term))
       );
   });
   readonly pageCount = computed(() =>
     Math.max(1, Math.ceil(this.matches().length / this.pageSize))
   );
-  readonly currentPage = computed(() =>
-    Math.min(this.page(), this.pageCount() - 1)
-  );
+  readonly currentPage = computed(() => Math.min(this.page(), this.pageCount() - 1));
   readonly visible = computed(() =>
     this.matches().slice(
       this.currentPage() * this.pageSize,
@@ -102,37 +61,41 @@ export class QuestionWorkspaceComponent {
     )
   );
 
-  constructor() {
+  constructor(
+    private readonly forms: AssessmentTestFormService,
+    readonly form: Signal<AssessmentTestForm>,
+    private readonly requestedQuestion: Signal<Question | null>,
+    private readonly selectionChange: (question: Question) => void,
+    private readonly focusHeading: () => void
+  ) {
+    // Keep the bridge in the shared Angular core context: interop helpers can
+    // resolve a different core instance when the remote is mounted in the shell.
     effect((cleanup) => {
       const form = this.form();
+      const subscription = merge(form.valueChanges, form.statusChanges)
+        .pipe(
+          startWith(null),
+          map(() => ({ form, questions: [...form.controls.testQuestions.controls] }))
+        )
+        .subscribe((snapshot) => this.questionSnapshot.set(snapshot));
+      cleanup(() => subscription.unsubscribe());
       this.selected.set(form.controls.testQuestions.at(0));
       this.removed.set(null);
+      this.moveOpen.set(false);
+      this.moveTarget.set(1);
+      this.announcement.set('');
       this.search.set('');
       this.incompleteOnly.set(false);
       this.page.set(0);
-      const subscription = form.valueChanges.subscribe(() =>
-        this.revision.update((value) => value + 1)
-      );
-      cleanup(() => subscription.unsubscribe());
     });
     effect(() => {
       const requested = this.requestedQuestion();
-      if (
-        requested &&
-        this.form().controls.testQuestions.controls.includes(
-          requested
-        )
-      ) {
-        if (untracked(this.selected) !== requested)
-          this.clearFilters();
+      if (requested && this.form().controls.testQuestions.controls.includes(requested)) {
+        if (untracked(this.selected) !== requested) this.clearFilters();
         this.selected.set(requested);
-        this.heading()?.nativeElement.focus({ preventScroll: false });
+        this.focusHeading();
         this.page.set(
-          Math.floor(
-            this.form().controls.testQuestions.controls.indexOf(
-              requested
-            ) / this.pageSize
-          )
+          Math.floor(this.form().controls.testQuestions.controls.indexOf(requested) / this.pageSize)
         );
       }
     });
@@ -141,9 +104,8 @@ export class QuestionWorkspaceComponent {
   select(question: Question, focus = true) {
     this.selected.set(question);
     this.moveOpen.set(false);
-    this.selectionChange.emit(question);
-    if (focus)
-      this.heading()?.nativeElement.focus({ preventScroll: false });
+    this.selectionChange(question);
+    if (focus) this.focusHeading();
   }
   clearFilters() {
     this.search.set('');
@@ -161,18 +123,13 @@ export class QuestionWorkspaceComponent {
   private reveal(question: Question) {
     this.clearFilters();
     this.page.set(
-      Math.floor(
-        this.form().controls.testQuestions.controls.indexOf(
-          question
-        ) / this.pageSize
-      )
+      Math.floor(this.form().controls.testQuestions.controls.indexOf(question) / this.pageSize)
     );
     this.select(question);
   }
   add() {
     this.forms.addQuestion(this.form());
-    const question =
-      this.form().controls.testQuestions.controls.at(-1)!;
+    const question = this.form().controls.testQuestions.controls.at(-1)!;
     this.reveal(question);
     this.announcement.set('New question added.');
   }
@@ -184,23 +141,17 @@ export class QuestionWorkspaceComponent {
       ...raw,
       choices: raw.choices.map((value) => ({ value })),
     });
-    this.form().controls.testQuestions.insert(
-      this.selectedIndex() + 1,
-      copy
-    );
+    this.form().controls.testQuestions.insert(this.selectedIndex() + 1, copy);
     this.form().markAsDirty();
     this.reveal(copy);
-    this.announcement.set(
-      'Question duplicated. Edit the copy below.'
-    );
+    this.announcement.set('Question duplicated. Edit the copy below.');
   }
   openMove() {
     this.moveTarget.set(this.selectedIndex() + 1);
     this.moveOpen.set(true);
   }
   moveTo() {
-    if (this.validMove())
-      this.move(this.moveTarget() - 1 - this.selectedIndex());
+    if (this.validMove()) this.move(this.moveTarget() - 1 - this.selectedIndex());
   }
   move(offset: number) {
     const array = this.form().controls.testQuestions;
@@ -212,9 +163,7 @@ export class QuestionWorkspaceComponent {
     array.insert(target, question);
     this.form().markAsDirty();
     this.reveal(question);
-    this.announcement.set(
-      `Question moved to position ${target + 1}.`
-    );
+    this.announcement.set(`Question moved to position ${target + 1}.`);
   }
   remove() {
     const array = this.form().controls.testQuestions;
@@ -231,10 +180,7 @@ export class QuestionWorkspaceComponent {
     const removed = this.removed();
     if (!removed) return;
     const array = this.form().controls.testQuestions;
-    array.insert(
-      Math.min(removed.index, array.length),
-      removed.question
-    );
+    array.insert(Math.min(removed.index, array.length), removed.question);
     this.form().markAsDirty();
     this.reveal(removed.question);
     this.removed.set(null);
@@ -254,11 +200,5 @@ export class QuestionWorkspaceComponent {
       question.markAllAsTouched();
       this.reveal(question);
     }
-  }
-  addChoice(question: Question) {
-    this.forms.addChoice(question);
-  }
-  removeChoice(question: Question, index: number) {
-    this.forms.removeChoice(question, index);
   }
 }
