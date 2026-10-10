@@ -34,7 +34,7 @@
     "@tmdjr/document-contracts": "^0.0.36",
     "@tmdjr/ngx-shared-headers": "21.0.5",
     "@tmdjr/ngx-user-metadata": "^21.0.4",
-    "@tmdjr/service-nestjs-assessment-test-contracts": "file:vendor/tmdjr-service-nestjs-assessment-test-contracts-0.0.20.tgz",
+    "@tmdjr/service-nestjs-assessment-test-contracts": "0.0.20",
     "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.7.0",
     "karma": "~6.4.0",
