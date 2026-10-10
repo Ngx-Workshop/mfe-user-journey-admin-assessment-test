@@ -104,3 +104,13 @@ layout checks and production compilation pass. Builds used isolated
 All existing TypeScript files were compared against HEAD: only relative path
 strings changed. Hosted browser/service integration was not rerun for this
 mechanical reorganization.
+
+## Document section subject verification — 2026-10-09
+
+- PASS: 39 ChromeHeadless tests, including actual Material selection of Rust,
+  generated ID/title payload, option object replacement, legacy/empty/loading/error/
+  retry states, renamed title on edit and dynamic ID-based filtering.
+- PASS: production build in /tmp/assessment-admin-section-subjects-build, strict
+  source typecheck and source layout checks.
+
+See [subject handoff](../specs/005-document-section-subjects/handoff.md).

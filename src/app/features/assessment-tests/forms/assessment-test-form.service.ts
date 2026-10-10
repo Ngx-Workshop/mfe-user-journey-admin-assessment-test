@@ -52,6 +52,7 @@ export type TestQuestionForm = {
 export type AssessmentTestForm = FormGroup<{
   name: FormControl<string>;
   subject: FormControl<AssessmentSubject>;
+  sectionTitle: FormControl<string>;
   level: FormControl<number>;
   testQuestions: FormArray<FormGroup<TestQuestionForm>>;
 }>;
@@ -69,9 +70,16 @@ export class AssessmentTestFormService {
         nonNullable: true,
       }),
       subject: this.fb.control<AssessmentSubject>(
-        initial?.subject ?? 'ANGULAR',
+        initial?.subject ?? '',
         {
           validators: [nonBlank],
+          nonNullable: true,
+        }
+      ),
+      sectionTitle: this.fb.control(
+        initial?.sectionTitle || initial?.subject || '',
+        {
+          validators: [nonBlank, Validators.maxLength(120)],
           nonNullable: true,
         }
       ),
@@ -160,6 +168,7 @@ export class AssessmentTestFormService {
     return {
       name: raw.name.trim(),
       subject: raw.subject,
+      sectionTitle: raw.sectionTitle.trim(),
       level: raw.level,
       testQuestions: raw.testQuestions.map((q) => ({
         question: q.question.trim(),

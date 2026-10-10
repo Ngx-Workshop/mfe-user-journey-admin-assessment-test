@@ -64,10 +64,11 @@ export class AssessmentWizardViewModel {
   }
 
   reviewDetails() {
-    const { name, subject, level } = this.form.controls;
+    const { name, subject, sectionTitle, level } = this.form.controls;
     return {
       name: name.value,
       subject: subject.value,
+      sectionTitle: sectionTitle.value,
       level: level.value,
     };
   }
@@ -94,6 +95,7 @@ export class AssessmentWizardViewModel {
       const controls = [
         this.form.controls.name,
         this.form.controls.subject,
+        this.form.controls.sectionTitle,
         this.form.controls.level,
       ];
       controls.forEach((c) => c.markAsTouched());

@@ -12,6 +12,19 @@ export class AssessmentCatalogViewModel {
     this.loading = store.loading;
     this.error = store.error;
   }
+  readonly subjects = computed(() =>
+    [
+      ...new Map(
+        this.tests().map((test) => [
+          test.subject,
+          {
+            _id: test.subject,
+            sectionTitle: test.sectionTitle || test.subject,
+          },
+        ])
+      ).values(),
+    ].sort((a, b) => a.sectionTitle.localeCompare(b.sectionTitle))
+  );
   readonly query = signal('');
   readonly subjectFilter = signal<
     AssessmentTestDto['subject'] | 'ALL'
@@ -35,9 +48,11 @@ export class AssessmentCatalogViewModel {
 
     if (q) {
       rows = rows.filter((t) => {
-        const haystack = [t.name, t.subject, String(t.level)].join(
-          ' '
-        );
+        const haystack = [
+          t.name,
+          t.sectionTitle || t.subject,
+          String(t.level),
+        ].join(' ');
         return haystack.toLowerCase().includes(q);
       });
     }

@@ -12,6 +12,7 @@ const test: AssessmentTestDto = {
   __v: 3,
   name: 'Assessment',
   subject: 'ANGULAR',
+  sectionTitle: 'Angular',
   level: 1,
   lastUpdated: '',
   testQuestions: [
@@ -47,6 +48,19 @@ describe('singleton assessment stores', () => {
     expect(second.query()).toBe('');
   });
 
+  it('displays dynamic titles, searches by title and filters by section identity', () => {
+    const rust = { ...test, subject: 'rust-id', sectionTitle: 'Rust' };
+    const other = { ...test, _id: 'other', subject: 'other-id', sectionTitle: 'Rust' };
+    api.list$.and.returnValue(of([rust, other]));
+    const store = TestBed.inject(AssessmentCatalogStore);
+    const vm = new AssessmentCatalogViewModel(store);
+    store.reload$().subscribe();
+    expect(vm.subjects()).toEqual([{ _id: 'rust-id', sectionTitle: 'Rust' }, { _id: 'other-id', sectionTitle: 'Rust' }]);
+    vm.query.set('rust');
+    expect(vm.filtered().length).toBe(2);
+    vm.subjectFilter.set('rust-id');
+    expect(vm.filtered()).toEqual([rust]);
+  });
   it('starts requests lazily, suppresses concurrent operations, and releases cancelled loading', () => {
     const pending = new Subject<AssessmentTestDto[]>();
     api.list$.and.returnValue(pending);

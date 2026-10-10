@@ -33,6 +33,7 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
     >
       <ngx-assessment-test-list-filters
         [query]="vm().query()"
+        [subjects]="vm().subjects()"
         [subjectFilter]="vm().subjectFilter()"
         [levelCap]="vm().levelCap()"
         [levels]="vm().levels()"

@@ -15,6 +15,7 @@ const rows = Array.from(
       __v: 0,
       name: `Assessment ${String(i).padStart(2, '0')}`,
       subject: i % 2 ? 'ANGULAR' : 'RXJS',
+      sectionTitle: i % 2 ? 'Angular' : 'RxJS',
       level: i + 1,
       lastUpdated: '2026-10-01T00:00:00Z',
       testQuestions: Array.from({ length: 50 }, (_, q) => ({

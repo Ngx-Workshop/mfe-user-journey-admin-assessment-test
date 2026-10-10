@@ -33,7 +33,7 @@ type ReviewQuestion = ReturnType<
         <div>
           <p class="assessment-review__label">Subject</p>
           <p class="assessment-review__value">
-            {{ details().subject }}
+            {{ details().sectionTitle }}
           </p>
         </div>
         <div>
@@ -239,7 +239,10 @@ type ReviewQuestion = ReturnType<
 export class AssessmentReviewComponent {
   readonly details =
     input.required<
-      Pick<AssessmentTestPayload, 'name' | 'subject' | 'level'>
+      Pick<
+        AssessmentTestPayload,
+        'name' | 'subject' | 'sectionTitle' | 'level'
+      >
     >();
   readonly total = input.required<number>();
   readonly questions = input.required<ReviewQuestion[]>();

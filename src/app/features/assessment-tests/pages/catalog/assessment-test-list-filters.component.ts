@@ -9,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { AssessmentSection } from '../../models/assessment-test';
 import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contracts';
 
 @Component({
@@ -56,10 +57,12 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
           [value]="subjectFilter()"
           (selectionChange)="subjectFilterChange.emit($event.value)"
         >
-          <mat-option value="ALL">All subjects</mat-option
-          ><mat-option value="ANGULAR">Angular</mat-option
-          ><mat-option value="NESTJS">NestJS</mat-option
-          ><mat-option value="RXJS">RxJS</mat-option>
+          <mat-option value="ALL">All subjects</mat-option>
+          @for (subject of subjects(); track subject._id) {
+            <mat-option [value]="subject._id">{{
+              subject.sectionTitle
+            }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic"
@@ -128,6 +131,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssessmentTestListFiltersComponent {
+  readonly subjects = input<readonly AssessmentSection[]>([]);
   readonly levels = input<number[]>([]);
   readonly query = input('');
   readonly subjectFilter = input<

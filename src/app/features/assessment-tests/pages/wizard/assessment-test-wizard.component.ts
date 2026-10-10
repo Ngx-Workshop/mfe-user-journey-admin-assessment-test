@@ -4,6 +4,7 @@ import {
   DestroyRef,
   HostListener,
   inject,
+  effect,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -29,6 +30,7 @@ import { AssessmentBasicsComponent } from './assessment-basics.component';
 import { AssessmentReviewComponent } from './assessment-review.component';
 import { AssessmentWizardViewModel } from './assessment-wizard.view-model';
 import { AssessmentTestFormService } from '../../forms/assessment-test-form.service';
+import { AssessmentSubjectsStore } from '../../state/assessment-subjects.store';
 import { AssessmentEditorStore } from '../../state/assessment-editor.store';
 
 @Component({
@@ -85,7 +87,13 @@ import { AssessmentEditorStore } from '../../state/assessment-editor.store';
           }
           @switch (vm.step()) {
             @case (0) {
-              <ngx-assessment-basics [form]="form" />
+              <ngx-assessment-basics
+                [form]="form"
+                [subjects]="subjects.sections()"
+                [loading]="subjects.loading()"
+                [error]="subjects.error()"
+                (retry)="reloadSubjects()"
+              />
             }
             @case (1) {
               <ngx-question-workspace
@@ -140,6 +148,7 @@ import { AssessmentEditorStore } from '../../state/assessment-editor.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssessmentTestWizardComponent {
+  readonly subjects = inject(AssessmentSubjectsStore);
   private readonly store = inject(AssessmentEditorStore);
   private readonly forms = inject(AssessmentTestFormService);
   private readonly route = inject(ActivatedRoute);
@@ -163,6 +172,19 @@ export class AssessmentTestWizardComponent {
   }
 
   constructor() {
+    this.reloadSubjects();
+    effect(() => {
+      const section = this.subjects
+        .sections()
+        .find(
+          (section) =>
+            section._id === this.form.controls.subject.value
+        );
+      if (section)
+        this.form.controls.sectionTitle.setValue(
+          section.sectionTitle
+        );
+    });
     const routeId$ = this.route.paramMap.pipe(
       map((params) => params.get('id')),
       distinctUntilChanged()
@@ -175,6 +197,13 @@ export class AssessmentTestWizardComponent {
       .subscribe((test) => {
         this.vm.form = this.forms.createForm(test ?? undefined);
       });
+  }
+
+  reloadSubjects() {
+    this.subjects
+      .reload$()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   @HostListener('window:beforeunload', ['$event'])

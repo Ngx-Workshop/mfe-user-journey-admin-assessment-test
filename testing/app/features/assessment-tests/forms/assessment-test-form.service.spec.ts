@@ -14,6 +14,7 @@ describe('assessment authoring form', () => {
     service.createForm({
       name: ' Test ',
       subject: 'ANGULAR',
+  sectionTitle: 'Angular',
       level: 1,
       testQuestions: [
         question,

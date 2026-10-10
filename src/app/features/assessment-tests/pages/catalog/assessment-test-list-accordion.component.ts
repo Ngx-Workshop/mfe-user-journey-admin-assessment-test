@@ -21,7 +21,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
             <div class="assessment-list__identity">
               <div class="assessment-list__metadata">
                 <span class="assessment-list__subject">{{
-                  test.subject
+                  test.sectionTitle || test.subject
                 }}</span
                 ><span>Level {{ test.level }}</span>
               </div>

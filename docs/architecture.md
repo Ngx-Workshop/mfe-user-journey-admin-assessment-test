@@ -11,7 +11,7 @@ asynchronous requests and lifetimes. No additional state framework is used.
 | Layer | Source | Responsibility |
 | --- | --- | --- |
 | Model | `features/assessment-tests/models/assessment-test.ts` | DTO-derived subject and explicit create/update payload types; no forms, state or HTTP dependencies |
-| Data access | `features/assessment-tests/api/assessment-tests-api.service.ts` | Stateless, cold HTTP observables; sole HttpClient consumer |
+| Data access | `features/assessment-tests/api/assessment-tests-api.service.ts` | Stateless, cold assessment HTTP observables |
 | Singleton state | `features/assessment-tests/state/assessment-catalog.store.ts` | Server catalog, pending/error state, refresh/delete orchestration and success-only row removal |
 | Singleton state | `features/assessment-tests/state/assessment-editor.store.ts` | Current server definition/ID/version, load/save orchestration, pending/error state and mutation guards |
 | Local view model | `features/assessment-tests/pages/catalog/assessment-catalog.view-model.ts` | Search/subject/level/sort, ten-row pagination, clamping and derived catalog rows |
@@ -75,8 +75,9 @@ The empty child route is the catalog; `tests/new` and `tests/:id` mount the guar
 wizard. Learner attempts and scoring remain service-owned. The wizard saves mutable
 definitions directly; no publication lifecycle is implied.
 
-Published contract package: `@tmdjr/service-nestjs-assessment-test-contracts` 0.0.18
-(as installed in this checkout). Payloads remain explicitly mapped. PATCH goes to
+Assessment contract package: generated `@tmdjr/service-nestjs-assessment-test-contracts`
+0.0.20, vendored locally pending publication. Document section types use published
+`@tmdjr/document-contracts` 0.0.34. Payloads remain explicitly mapped. PATCH goes to
 the collection URL and includes route `_id` and the loaded `__v`. DELETE uses `/:id`.
 Production uses `/api/assessment-test`; development replacement uses
 `http://localhost:3005/assessment-test`. Do not publish development assets. The shell
@@ -94,3 +95,27 @@ under `src/app/features/assessment-tests`; page-only views/models stay beside th
 page, reusable views live under `components`, stateless adapters under `api`, and
 singleton orchestration under `state`. Tests mirror the responsibility folders.
 The app entry files and external integration contracts are preserved.
+
+## Document section subjects — 2026-10-09
+
+## Contract and rollout
+
+Definitions save `subject` as the document section `_id` and `sectionTitle` as
+its display title snapshot. New authoring reads document GET /navigation/sections
+(map wrapper); production /api/documents, development localhost:3007. New forms
+require selection. Existing subjects absent from the catalog retain their identity
+and remain editable; they are not silently reassigned by matching a title.
+
+Legacy persisted strings and attempts are unchanged. Missing display titles fall
+back to the old subject. Titles refresh from current document sections when the
+admin opens a definition, then save explicitly; used-definition protection still
+applies. No background title synchronization or bulk migration is performed.
+The service validates string shape, not section existence through a foreign DB.
+Duplicate levels, eligibility and starts compare IDs. Subjects with no definitions
+or attempts no longer create empty fixed-enum learner cards.
+
+Generated contract 0.0.20 is built locally and vendored in both consumers. Release
+owners deploy the service, publish/adopt the reviewed contract and release both
+consumers together before enabling new subjects. Verify real Admin creation,
+section load/error states and learner start/resume/history through hosted gateways.
+No publication, deployment or production data changes were performed here.

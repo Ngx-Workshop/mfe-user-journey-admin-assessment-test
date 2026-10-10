@@ -1,3 +1,4 @@
+import { DocumentSectionsApiService } from '../../../../../../src/app/features/assessment-tests/api/document-sections-api.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -13,6 +14,7 @@ const test = {
   __v: 2,
   name: 'Test',
   subject: 'ANGULAR',
+  sectionTitle: 'Angular',
   level: 1,
   lastUpdated: '',
   testQuestions: [
@@ -39,6 +41,7 @@ describe('assessment authoring failures and navigation', () => {
     params = new BehaviorSubject(convertToParamMap({}));
     TestBed.configureTestingModule({
       providers: [
+        { provide: DocumentSectionsApiService, useValue: { list$: () => of([{ _id: 'ANGULAR', sectionTitle: 'Angular' }]) } },
         { provide: AssessmentTestsApiService, useValue: api },
         { provide: Router, useValue: router },
         { provide: MatSnackBar, useValue: snack },
@@ -76,9 +79,24 @@ describe('assessment authoring failures and navigation', () => {
     expect(component.vm.error()).toBeNull();
     expect(component.vm.tests().length).toBe(1);
   });
+  it('loads an existing section ID and refreshes its display title without changing identity', () => {
+    const subject = '670000000000000000000001';
+    params.next(convertToParamMap({ id: '123' }));
+    api.get$.and.returnValue(of({ ...test, subject, sectionTitle: 'Old Rust title' } as any));
+    spyOn(TestBed.inject(DocumentSectionsApiService), 'list$').and.returnValue(of([{ _id: subject, sectionTitle: 'Rust language' }]));
+    const fixture = TestBed.createComponent(AssessmentTestWizardComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.form.controls.subject.value).toBe(subject);
+    expect(fixture.componentInstance.form.controls.sectionTitle.value).toBe('Rust language');
+    api.update$.and.returnValue(of({ ...test, subject, sectionTitle: 'Rust language' } as any));
+    fixture.componentInstance.submit();
+    expect(api.update$.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ subject, sectionTitle: 'Rust language', _id: '123', __v: 2 }));
+  });
   it('validates skipped steps before entering review', () => {
     const component = TestBed.runInInjectionContext(() => new AssessmentTestWizardComponent());
     component.form.controls.name.setValue('Title');
+    component.form.controls.subject.setValue('ANGULAR');
+    component.form.controls.sectionTitle.setValue('Angular');
     component.vm.setStep(2);
     expect(component.vm.step()).toBe(1);
   });
@@ -189,6 +207,8 @@ describe('assessment authoring failures and navigation', () => {
     expect(
       fixture.nativeElement.querySelector('ngx-assessment-wizard-heading').textContent
     ).toContain('Unsaved changes');
+    fixture.componentInstance.form.controls.subject.setValue('ANGULAR');
+    fixture.componentInstance.form.controls.sectionTitle.setValue('Angular');
     const review: HTMLButtonElement = [
       ...fixture.nativeElement.querySelectorAll('nav button'),
     ].find((button: any) => button.textContent.includes('Review')) as HTMLButtonElement;

@@ -8,6 +8,7 @@ import { AssessmentTestPayload } from '../../../../../src/app/features/assessmen
 const payload: AssessmentTestPayload = {
   name: 'Definition',
   subject: 'ANGULAR',
+  sectionTitle: 'Angular',
   level: 1,
   testQuestions: [
     {
