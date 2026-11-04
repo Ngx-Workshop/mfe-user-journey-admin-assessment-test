@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,7 +13,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
 
 @Component({
   selector: 'ngx-assessment-test-list-accordion',
-  imports: [DatePipe, MatButtonModule, MatIconModule, MatMenuModule],
+  imports: [NgxButton,DatePipe, MatButtonModule, MatIconModule, MatMenuModule],
   template: `
     <ul class="assessment-list" aria-label="Assessment tests">
       @for (test of tests(); track test._id) {
@@ -54,7 +55,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
             </div>
             <div class="assessment-list__actions">
               <button
-                mat-stroked-button
+                mat-stroked-button ngxButton surface="outline"
                 (click)="edit.emit(test)"
                 [disabled]="busy()"
                 [attr.aria-label]="'Edit ' + test.name"
@@ -69,7 +70,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
               >
                 <mat-icon>more_vert</mat-icon>
               </button>
-              <mat-menu #menu="matMenu"
+              <mat-menu #menu="matMenu" class="ngx-design-system-overlay"
                 ><button mat-menu-item (click)="delete.emit(test)">
                   <mat-icon>delete_outline</mat-icon
                   ><span>Delete assessment</span>
@@ -107,32 +108,27 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   `,
   styles: [
     `
-      :host {
-        display: block;
-      }
+      :host { display: block; }
       .assessment-list {
         list-style: none;
         padding: 0;
         margin: 0;
         display: grid;
-        gap: 12px;
+        gap: 0;
       }
       .assessment-list__assessment-row {
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
-        background: var(--mat-sys-surface-container-low);
+        border: 1px solid var(--ngx-color-border);
+        border-radius: 0;
+        background: var(--ngx-color-surface);
         overflow: hidden;
       }
       .assessment-list__row-top {
         display: flex;
         align-items: center;
-        gap: 20px;
-        padding: 22px 24px;
+        gap: 8px;
+        padding: 8px 10px;
       }
-      .assessment-list__identity {
-        flex: 1;
-        min-width: 0;
-      }
+      .assessment-list__identity { flex: 1; min-width: 0; }
       .assessment-list__metadata,
       .assessment-list__details-line,
       .assessment-list__actions {
@@ -141,22 +137,14 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
         gap: 16px;
         flex-wrap: wrap;
       }
-      .assessment-list__metadata {
-        font-size: 12px;
-        font-weight: 600;
-      }
-      .assessment-list__subject {
-        color: var(--mat-sys-primary);
-        letter-spacing: 0.06em;
-      }
-      h3 {
-        margin: 8px 0;
-      }
+      .assessment-list__metadata { font-size: 12px; font-weight: 600; }
+      .assessment-list__subject { color: var(--ngx-color-primary); letter-spacing: 0.06em; }
+      h3 { margin: 4px 0; }
       .assessment-list__title-link {
         font: inherit;
-        font-size: 20px;
+        font-size: 14px;
         font-weight: 600;
-        color: var(--mat-sys-on-surface);
+        color: var(--ngx-color-text);
         border: 0;
         padding: 0;
         background: transparent;
@@ -164,66 +152,27 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
         cursor: pointer;
         overflow-wrap: anywhere;
       }
-      .assessment-list__title-link:hover {
-        color: var(--mat-sys-primary);
-        text-decoration: underline;
-      }
+      .assessment-list__title-link:hover { color: var(--ngx-color-primary); text-decoration: underline; }
       .assessment-list__title-link:focus-visible,
-      summary:focus-visible {
-        outline: 2px solid var(--mat-sys-primary);
-        outline-offset: 4px;
-      }
-      .assessment-list__details-line {
-        font-size: 13px;
-        color: var(--mat-sys-on-surface-variant);
-        gap: 8px 20px;
-      }
-      .assessment-list__actions {
-        flex-wrap: nowrap;
-        gap: 4px;
-      }
-      .assessment-list__preview {
-        border-top: 1px solid var(--mat-sys-outline-variant);
-        padding: 12px 24px;
-      }
-      summary {
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-      }
-      summary span {
-        color: var(--mat-sys-on-surface-variant);
-        margin-left: 12px;
-        font-weight: 400;
-      }
+      summary:focus-visible { outline: 2px solid var(--ngx-color-primary); outline-offset: 4px; }
+      .assessment-list__details-line { font-size: 13px; color: var(--ngx-color-muted); gap: 8px 20px; }
+      .assessment-list__actions { flex-wrap: nowrap; gap: 4px; }
+      .assessment-list__preview { border-top: 1px solid var(--ngx-color-border); padding: 6px 10px; }
+      summary { cursor: pointer; font-size: 13px; font-weight: 500; }
+      summary span { color: var(--ngx-color-muted); margin-left: 12px; font-weight: 400; }
       ol {
         padding-left: 22px;
         display: grid;
-        gap: 12px;
+        gap: 0;
         overflow-wrap: anywhere;
       }
-      .assessment-list__preview p {
-        font-size: 13px;
-        color: var(--mat-sys-on-surface-variant);
-      }
+      .assessment-list__preview p { font-size: 13px; color: var(--ngx-color-muted); }
       @media (max-width: 600px) {
-        .assessment-list__row-top {
-          padding: 16px;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-        .assessment-list__identity {
-          flex-basis: 100%;
-        }
-        .assessment-list__actions {
-          margin-left: auto;
-        }
-        .assessment-list__preview {
-          padding: 12px 16px;
-        }
-        .assessment-list__title-link {
-          font-size: 18px;
-        }
+      .assessment-list__row-top { padding: 8px; flex-wrap: wrap; gap: 0; }
+      .assessment-list__identity { flex-basis: auto; }
+      .assessment-list__actions { margin-left: auto; }
+      .assessment-list__preview { padding: 6px 8px; }
+      .assessment-list__title-link { font-size: 14px; }
       }
     `,
   ],

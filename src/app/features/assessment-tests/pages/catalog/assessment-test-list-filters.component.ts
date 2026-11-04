@@ -53,7 +53,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic"
         ><mat-label>Subject</mat-label>
-        <mat-select
+        <mat-select panelClass="ngx-design-system-overlay ngx-select-panel"
           [value]="subjectFilter()"
           (selectionChange)="subjectFilterChange.emit($event.value)"
         >
@@ -67,7 +67,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic"
         ><mat-label>Maximum level</mat-label>
-        <mat-select
+        <mat-select panelClass="ngx-design-system-overlay ngx-select-panel"
           [value]="levelCap() ?? 'ALL'"
           (selectionChange)="
             levelCapChange.emit(
@@ -85,7 +85,7 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
       </mat-form-field>
       <mat-form-field appearance="outline" subscriptSizing="dynamic"
         ><mat-label>Sort by</mat-label>
-        <mat-select
+        <mat-select panelClass="ngx-design-system-overlay ngx-select-panel"
           [value]="sort()"
           (selectionChange)="sortChange.emit($event.value)"
           ><mat-option value="updated">Recently updated</mat-option
@@ -99,33 +99,8 @@ import { AssessmentTestDto } from '@tmdjr/service-nestjs-assessment-test-contrac
   `,
   styles: [
     `
-      .assessment-filters__filters {
-        display: grid;
-        grid-template-columns: minmax(200px, 2fr) repeat(
-            3,
-            minmax(155px, 1fr)
-          );
-        gap: 12px;
-        padding: 20px;
-        border-radius: 16px;
-        background: var(--mat-sys-surface-container-low);
-        border: 1px solid var(--mat-sys-outline-variant);
-      }
-      mat-form-field {
-        width: 100%;
-        min-width: 0;
-      }
-      @media (max-width: 1100px) {
-        .assessment-filters__filters {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-      @media (max-width: 600px) {
-        .assessment-filters__filters {
-          grid-template-columns: minmax(0, 1fr);
-          padding: 16px;
-        }
-      }
+      .assessment-filters__filters { display: grid; gap: 16px; padding: 4px 0 12px; }
+      mat-form-field { width: 100%; min-width: 0; }
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

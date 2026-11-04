@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,7 +7,7 @@ import {
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
+import { AssessmentPanelComponent } from '../../components/assessment-panel.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -15,24 +16,17 @@ import { AssessmentTestForm } from '../../forms/assessment-test-form.service';
 
 @Component({
   selector: 'ngx-assessment-basics',
-  imports: [
+  imports: [NgxButton,
     ReactiveFormsModule,
     MatButtonModule,
-    MatCardModule,
+    AssessmentPanelComponent,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
   ],
   template: `
-    <mat-card class="assessment-basics__panel">
-      <mat-card-header>
-        <mat-card-title>Basics</mat-card-title>
-        <mat-card-subtitle
-          >Give your assessment a name and a place in the learning
-          journey.</mat-card-subtitle
-        >
-      </mat-card-header>
-      <mat-card-content>
+    <ngx-assessment-panel heading="Basics" eyebrow="ASSESSMENTS / BASICS" class="assessment-basics__panel">
+      <div>
         <form [formGroup]="form()" class="assessment-basics__grid">
           <mat-form-field
             appearance="outline"
@@ -54,7 +48,7 @@ import { AssessmentTestForm } from '../../forms/assessment-test-form.service';
             [attr.aria-busy]="loading()"
           >
             <mat-label>Subject</mat-label>
-            <mat-select
+            <mat-select panelClass="ngx-design-system-overlay ngx-select-panel"
               formControlName="subject"
               required
               (selectionChange)="selectSubject($event.value)"
@@ -102,7 +96,7 @@ import { AssessmentTestForm } from '../../forms/assessment-test-form.service';
             {{ error() }}
             <button
               type="button"
-              mat-stroked-button
+              mat-stroked-button ngxButton surface="outline"
               (click)="retry.emit()"
             >
               Retry subjects
@@ -117,25 +111,25 @@ import { AssessmentTestForm } from '../../forms/assessment-test-form.service';
         <p class="assessment-basics__hint">
           Tests with learner attempts cannot be changed or deleted.
         </p>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </ngx-assessment-panel>
   `,
   styles: [
     `
       :host {
         display: block;
+        height: 100%;
         min-width: 0;
       }
       .assessment-basics__hint {
-        color: var(--mat-sys-on-surface-variant);
+        color: var(--ngx-color-muted);
         font-size: 0.9rem;
         margin: 0;
         line-height: 1.6;
       }
       .assessment-basics__panel {
-        padding: 1rem;
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
+        padding: 0;
+        border: 0;
         box-shadow: none;
       }
       .assessment-basics__grid {
@@ -144,7 +138,7 @@ import { AssessmentTestForm } from '../../forms/assessment-test-form.service';
           minmax(0, 1fr) minmax(150px, 0.6fr)
           130px;
         gap: 1rem;
-        padding-top: 1.5rem;
+        padding-top: 4px;
       }
       mat-form-field {
         min-width: 0;

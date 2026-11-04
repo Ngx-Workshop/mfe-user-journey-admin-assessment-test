@@ -1,4 +1,9 @@
+import { signal } from '@angular/core';
+import { AssessmentPanelComponent } from '../assessment-panel.component';
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
+  afterNextRender,
+  Injector,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -23,7 +28,7 @@ import { QuestionFieldsComponent } from './question-fields.component';
 
 @Component({
   selector: 'ngx-question-workspace',
-  imports: [
+  imports: [NgxButton, AssessmentPanelComponent,
     QuestionActionsComponent,
     QuestionOutlineComponent,
     QuestionFieldsComponent,
@@ -52,11 +57,11 @@ import { QuestionFieldsComponent } from './question-fields.component';
       </div>
       <div class="question-workspace__summary-actions">
         @if (vm.completeCount() < vm.questions().length) {
-          <button mat-stroked-button (click)="vm.firstIncomplete()">
+          <button mat-stroked-button ngxButton surface="outline" (click)="vm.firstIncomplete()">
             <mat-icon>rule</mat-icon>Find incomplete
           </button>
         }
-        <button mat-flat-button (click)="vm.add()">
+        <button mat-flat-button ngxButton surface="outline" (click)="vm.add()">
           <mat-icon>add</mat-icon>Add question
         </button>
       </div>
@@ -75,23 +80,27 @@ import { QuestionFieldsComponent } from './question-fields.component';
         "
       ></span>
     </div>
+    <div class="question-workspace__switch" role="group" aria-label="Question panels">
+      <button mat-button [attr.aria-pressed]="pane() === 'outline'" (click)="pane.set('outline')">Outline</button>
+      <button mat-button [attr.aria-pressed]="pane() === 'editor'" (click)="pane.set('editor')">Question editor</button>
+    </div>
     <div class="question-workspace__workspace">
+      <ngx-assessment-panel heading="Question outline" eyebrow="ASSESSMENTS / QUESTIONS" shape="chamfered" [class.question-workspace__hidden]="pane() !== 'outline'">
       <ngx-question-outline
         [vm]="vm"
         (searchChange)="vm.find($event)"
         (incompleteChange)="vm.filterIncomplete($event)"
-        (select)="vm.select($event)"
+        (questionSelect)="selectQuestion($event)"
         (clear)="vm.clearFilters()"
         (pageChange)="vm.page.set($event)"
       />
-      <section
-        class="question-workspace__question-editor"
-        aria-label="Selected question editor"
-      >
+      </ngx-assessment-panel>
+      <ngx-assessment-panel heading="Selected question editor" eyebrow="ASSESSMENTS / AUTHORING" background="grid" [resetKey]="vm.selected()" [class.question-workspace__hidden]="pane() !== 'editor'">
+      <section class="question-workspace__question-editor">
         <div class="question-workspace__status-message" role="status">
           {{ vm.announcement() }}
           @if (vm.removed()) {
-            <button mat-button (click)="vm.undo()">
+            <button mat-button ngxButton surface="glass" (click)="vm.undo()">
               Undo removal
             </button>
           }
@@ -133,13 +142,13 @@ import { QuestionFieldsComponent } from './question-fields.component';
           />
           <div class="question-workspace__question-pagination">
             <button
-              mat-stroked-button
+              mat-stroked-button ngxButton surface="outline"
               [disabled]="vm.selectedIndex() === 0"
               (click)="vm.adjacent(-1)"
             >
               <mat-icon>chevron_left</mat-icon>Previous question</button
             ><button
-              mat-stroked-button
+              mat-stroked-button ngxButton surface="outline"
               [disabled]="
                 vm.selectedIndex() === vm.questions().length - 1
               "
@@ -150,140 +159,76 @@ import { QuestionFieldsComponent } from './question-fields.component';
           </div>
         }
       </section>
+      </ngx-assessment-panel>
     </div>
   `,
-  styles: [
-    `
-      :host {
-        --line: var(--mat-sys-outline-variant);
-        --muted: var(--mat-sys-on-surface-variant);
-        display: block;
-        min-width: 0;
-      }
-      h2,
-      p {
-        margin: 0;
-      }
-      h2 {
-        font-size: 1.35rem;
-      }
-      .question-workspace__eyebrow {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--mat-sys-primary);
-        margin-bottom: 0.4rem;
-        font-weight: 600;
-      }
-      .question-workspace__workspace-summary,
-      .question-workspace__summary-actions,
-      .question-workspace__editor-header,
-      .question-workspace__question-pagination {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-      }
-      .question-workspace__workspace-summary
-        p:not(.question-workspace__eyebrow) {
-        color: var(--muted);
-        font-size: 0.85rem;
-        margin-top: 0.4rem;
-      }
-      .question-workspace__count {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-      .question-workspace__completion-track {
-        height: 4px;
-        background: var(--mat-sys-surface-container-highest);
-        border-radius: 4px;
-        overflow: hidden;
-        margin: 1.1rem 0 1.5rem;
-      }
-      .question-workspace__completion-track span {
-        display: block;
-        height: 100%;
-        background: var(--mat-sys-primary);
-      }
-      .question-workspace__workspace {
-        display: grid;
-        grid-template-columns: minmax(230px, 30%) minmax(0, 1fr);
-        gap: 1.25rem;
-        align-items: start;
-      }
-      .question-workspace__question-editor {
-        min-width: 0;
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        background: var(--mat-sys-surface-container-low);
-        padding: 1.5rem;
-      }
-      .question-workspace__editor-header {
-        flex-wrap: wrap;
-        border-bottom: 1px solid var(--line);
-        padding-bottom: 1rem;
-        margin-bottom: 1.5rem;
-      }
-      .question-workspace__muted {
-        font-size: 0.85rem;
-        font-weight: 400;
-        color: var(--muted);
-      }
-      .question-workspace__status-message:empty {
-        display: none;
-      }
-      .question-workspace__status-message {
-        font-size: 0.85rem;
-        color: var(--mat-sys-primary);
-        margin-bottom: 1rem;
-      }
-      .question-workspace__question-pagination {
-        flex-wrap: wrap;
-        border-top: 1px solid var(--line);
-        padding-top: 1rem;
-      }
-      button:focus-visible,
-      h2:focus-visible {
-        outline: 2px solid var(--mat-sys-primary);
-        outline-offset: 2px;
-      }
-      @media (max-width: 850px) {
-        .question-workspace__workspace {
-          grid-template-columns: 1fr;
-        }
-        .question-workspace__workspace-summary {
-          align-items: start;
-          flex-direction: column;
-        }
-        .question-workspace__summary-actions {
-          flex-wrap: wrap;
-        }
-        .question-workspace__question-editor {
-          padding: 1rem;
-        }
-      }
-    `,
-  ],
+  styles: [`
+    :host { display: flex; flex-direction: column; height: 100%; min-height: 0; min-width: 0; color: var(--ngx-color-text); }
+    h2, p { margin: 0; }
+    h2 { font-size: 1rem; }
+    .question-workspace__eyebrow { color: var(--ngx-color-primary); font: var(--ngx-font-label); font-size: 0.65rem; margin-bottom: 4px; }
+    .question-workspace__workspace-summary .question-workspace__eyebrow { display: none; }
+    .question-workspace__workspace-summary, .question-workspace__summary-actions, .question-workspace__editor-header, .question-workspace__question-pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .question-workspace__workspace-summary p, .question-workspace__count, .question-workspace__muted { color: var(--ngx-color-muted); font-size: 0.75rem; }
+    .question-workspace__workspace-summary { padding: 2px 4px; }
+    .question-workspace__summary-actions button { font-size: 0.75rem; padding-inline: 10px; }
+    .question-workspace__completion-track { flex-shrink: 0; height: 3px; margin: 6px 0; background: var(--ngx-color-border); }
+    .question-workspace__completion-track span { display: block; height: 100%; background: var(--ngx-color-primary); }
+    .question-workspace__workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 1rem; flex: 1; min-height: 0; }
+    .question-workspace__question-editor { min-width: 0; }
+    .question-workspace__editor-header { flex-wrap: wrap; border-bottom: 1px solid var(--ngx-color-border); padding-bottom: 8px; margin-bottom: 12px; }
+    .question-workspace__status-message { font-size: 0.75rem; color: var(--ngx-color-primary); }
+    .question-workspace__status-message:empty { display: none; }
+    .question-workspace__question-pagination { flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--ngx-color-border); }
+    h2:focus-visible { outline: 2px solid var(--ngx-color-primary); outline-offset: 2px; }
+    .question-workspace__switch { display: none; }
+    @media (max-width: 1000px) {
+      .question-workspace__workspace { grid-template-columns: minmax(0, 1fr); }
+      .question-workspace__switch { display: flex; flex-shrink: 0; }
+      .question-workspace__switch button[aria-pressed='true'] { background: var(--ngx-color-surface-high); }
+      ngx-assessment-panel { grid-row: 1; grid-column: 1; }
+      .question-workspace__hidden { display: none; }
+    }
+    @media (max-width: 600px) {
+      .question-workspace__workspace-summary h2 { display: none; }
+      .question-workspace__summary-actions { gap: 2px; }
+      .question-workspace__summary-actions button { font-size: 0.65rem; padding-inline: 4px; min-width: 0; }
+      .question-workspace__summary-actions mat-icon { display: none; }
+      .question-workspace__question-pagination button { font-size: 0.7rem; padding-inline: 4px; }
+    }
+    @media (max-height: 650px) and (max-width: 1000px) {
+      .question-workspace__workspace-summary { padding: 0; }
+      .question-workspace__workspace-summary p, .question-workspace__completion-track { display: none; }
+      .question-workspace__workspace-summary { justify-content: flex-end; }
+      .question-workspace__summary-actions button { min-height: 32px; height: 32px; }
+      .question-workspace__switch button { min-height: 32px; height: 32px; }
+    }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuestionWorkspaceComponent {
+  readonly pane = signal<'outline' | 'editor'>('editor');
   readonly form = input.required<AssessmentTestForm>();
   readonly requestedQuestion = input<Question | null>(null);
   readonly selectionChange = output<Question>();
   private readonly forms = inject(AssessmentTestFormService);
+  private readonly injector = inject(Injector);
   private readonly heading =
     viewChild<ElementRef<HTMLElement>>('editorHeading');
   readonly vm = new QuestionWorkspaceViewModel(
     this.forms,
     this.form,
     this.requestedQuestion,
-    (question) => this.selectionChange.emit(question),
-    () =>
-      this.heading()?.nativeElement.focus({ preventScroll: false })
+    (question) => { this.pane.set('editor'); this.selectionChange.emit(question); },
+    () => afterNextRender(() => this.heading()?.nativeElement.focus({ preventScroll: true }), { injector: this.injector })
   );
 
+  selectQuestion(question: Question) {
+    this.pane.set('editor');
+    this.vm.select(question);
+  }
   showInvalid(question: Question) {
+    this.pane.set('editor');
     this.vm.showInvalid(question);
   }
   addChoice(question: Question) {

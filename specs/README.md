@@ -19,3 +19,5 @@ completed feature records when actual implementation work begins.
 - [004 MVVM refactor](004-mvvm-refactor/spec.md) — Complete; locally and hosted verified. [Plan](004-mvvm-refactor/plan.md), [tasks](004-mvvm-refactor/tasks.md), [handoff](004-mvvm-refactor/handoff.md).
 
 - [005 Document section subjects](005-document-section-subjects/spec.md) — Implemented; hosted integration pending.
+
+- [006 Design system](006-design-system/spec.md) — Complete; desktop/mobile hosted UI verified. [Handoff](006-design-system/handoff.md).

@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -5,7 +6,7 @@ import {
   output,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
+import { AssessmentPanelComponent } from '../../components/assessment-panel.component';
 import { MatIconModule } from '@angular/material/icon';
 import { AssessmentTestPayload } from '../../models/assessment-test';
 import { TestQuestionForm } from '../../forms/assessment-test-form.service';
@@ -16,16 +17,10 @@ type ReviewQuestion = ReturnType<
 
 @Component({
   selector: 'ngx-assessment-review',
-  imports: [MatButtonModule, MatCardModule, MatIconModule],
+  imports: [NgxButton,MatButtonModule, AssessmentPanelComponent, MatIconModule],
   template: `
-    <mat-card class="assessment-review__panel">
-      <mat-card-header>
-        <mat-card-title>Review</mat-card-title>
-        <mat-card-subtitle
-          >Double check before saving.</mat-card-subtitle
-        >
-      </mat-card-header>
-      <mat-card-content class="assessment-review__review">
+    <ngx-assessment-panel heading="Review" eyebrow="ASSESSMENTS / REVIEW" class="assessment-review__panel">
+      <div class="assessment-review__review">
         <div>
           <p class="assessment-review__label">Name</p>
           <p class="assessment-review__value">{{ details().name }}</p>
@@ -66,7 +61,7 @@ type ReviewQuestion = ReturnType<
                 </summary>
                 <div class="assessment-review__review-detail">
                   <button
-                    mat-button
+                    mat-button ngxButton surface="glass"
                     (click)="edit.emit(reviewPage() * 10 + i)"
                   >
                     <mat-icon>edit</mat-icon>Edit question
@@ -101,7 +96,7 @@ type ReviewQuestion = ReturnType<
           @if (total() > 10) {
             <div class="assessment-review__review-pagination">
               <button
-                mat-button
+                mat-button ngxButton surface="glass"
                 [disabled]="reviewPage() === 0"
                 (click)="pageChange.emit(reviewPage() - 1)"
               >
@@ -110,7 +105,7 @@ type ReviewQuestion = ReturnType<
                 >Page {{ reviewPage() + 1 }} of
                 {{ pageCount() }}</span
               ><button
-                mat-button
+                mat-button ngxButton surface="glass"
                 [disabled]="reviewPage() + 1 >= pageCount()"
                 (click)="pageChange.emit(reviewPage() + 1)"
               >
@@ -123,40 +118,22 @@ type ReviewQuestion = ReturnType<
           Once learners have started this assessment, its questions
           cannot be changed or deleted.
         </p>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </ngx-assessment-panel>
   `,
   styles: [
     `
-      :host {
-        display: block;
-        min-width: 0;
-      }
+      :host { display: block; height: 100%; min-width: 0; }
       .assessment-review__hint {
-        color: var(--mat-sys-on-surface-variant);
+        color: var(--ngx-color-muted);
         font-size: 0.9rem;
         margin: 0;
         line-height: 1.6;
       }
-      .assessment-review__panel {
-        padding: 1rem;
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
-        box-shadow: none;
-      }
-      .assessment-review__review {
-        display: grid;
-        gap: 1rem;
-        padding-top: 1rem;
-      }
-      .assessment-review__label {
-        color: var(--mat-sys-on-surface-variant);
-        font-size: 0.75rem;
-        margin: 0;
-      }
-      .assessment-review__value {
-        margin: 0.3rem 0;
-      }
+      .assessment-review__panel { padding: 0; border: 0; box-shadow: none; }
+      .assessment-review__review { display: grid; gap: 1rem; padding-top: 4px; }
+      .assessment-review__label { color: var(--ngx-color-muted); font-size: 0.75rem; margin: 0; }
+      .assessment-review__value { overflow-wrap: anywhere; margin: 0.3rem 0; }
       .assessment-review__review-heading {
         display: flex;
         flex-wrap: wrap;
@@ -165,61 +142,29 @@ type ReviewQuestion = ReturnType<
         gap: 0.5rem;
         margin: 1rem 0;
       }
-      .assessment-review__review-heading h3 {
-        margin: 0;
-      }
-      .assessment-review__review-heading span {
-        font-size: 0.8rem;
-        color: var(--mat-sys-on-surface-variant);
-      }
-      .assessment-review__review-questions {
-        display: grid;
-        gap: 0.5rem;
-      }
-      .assessment-review__review-question {
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 10px;
-        overflow: hidden;
-      }
+      .assessment-review__review-heading h3 { margin: 0; }
+      .assessment-review__review-heading span { font-size: 0.8rem; color: var(--ngx-color-muted); }
+      .assessment-review__review-questions { display: grid; gap: 0.5rem; }
+      .assessment-review__review-question { border: 1px solid var(--ngx-color-border); border-radius: 10px; overflow: hidden; }
       summary {
         list-style: none;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        padding: 1rem;
+        padding: 0;
       }
-      summary::-webkit-details-marker {
-        display: none;
-      }
-      summary > span:nth-child(2) {
-        flex: 1;
-        min-width: 0;
-        overflow-wrap: anywhere;
-      }
-      summary mat-icon {
-        flex-shrink: 0;
-      }
-      details[open] summary mat-icon {
-        transform: rotate(180deg);
-      }
-      summary:focus-visible {
-        outline: 2px solid var(--mat-sys-primary);
-        outline-offset: -3px;
-      }
-      .assessment-review__review-number {
-        font-size: 0.8rem;
-        color: var(--mat-sys-primary);
-      }
-      .assessment-review__review-detail {
-        padding: 0 1rem 1rem;
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-      }
-      .assessment-review__correct {
-        color: var(--mat-sys-primary);
-      }
+      summary::-webkit-details-marker { display: none; }
+      summary > span:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+      summary mat-icon { flex-shrink: 0; }
+      details[open] summary mat-icon { transform: rotate(180deg); }
+      summary:focus-visible { outline: 2px solid var(--ngx-color-primary); outline-offset: -3px; }
+      .assessment-review__review-number { font-size: 0.8rem; color: var(--ngx-color-primary); }
+      .assessment-review__review-detail { padding: 0 1rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .assessment-review__correct { color: var(--ngx-color-primary); }
       .assessment-review__review-pagination {
+        flex-wrap: wrap;
+        min-width: 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -228,9 +173,7 @@ type ReviewQuestion = ReturnType<
         margin-top: 1rem;
       }
       @media (max-width: 850px) {
-        .assessment-review__panel {
-          padding: 0.25rem;
-        }
+      .assessment-review__panel { padding: 0.25rem; }
       }
     `,
   ],

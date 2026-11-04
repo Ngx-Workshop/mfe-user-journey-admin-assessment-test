@@ -125,3 +125,9 @@ mechanical reorganization.
   source typecheck and source layout checks.
 
 See [subject handoff](../specs/005-document-section-subjects/handoff.md).
+
+## Design-system migration verification — 2026-11-03
+
+See [006 handoff](../specs/006-design-system/handoff.md). All 42 ChromeHeadless tests, application/spec type checks and source layout checks pass. Isolated production output `/tmp/assessment-design-production` builds without compiler/budget warnings and contains a nonempty `3rdpartylicenses.txt`; the running development watcher/server are preserved.
+
+Hosted shell verified catalogue filtering/empty recovery, existing 51-question authoring, outline search/selection, review paging and required basics errors on desktop and 320/375/390px screens. Panel content scrolls inside the visible workspace; wizard actions remain visible. No persistent definitions were changed. Subject options currently fail from the separate localhost:3007 document service, so the browser verifies retry and existing-subject fallback rather than successful live creation. Existing unit tests cover section selection/payloads and failed/successful saves/deletes. Start the existing document-sections service for live creation verification; no endpoint change is required.

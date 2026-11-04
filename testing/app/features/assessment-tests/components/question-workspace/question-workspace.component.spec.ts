@@ -28,6 +28,46 @@ describe('large assessment question workspace', () => {
     fixture.componentRef.setInput('form', form);
     fixture.detectChanges();
   });
+  it('ignores native text-selection events from outline search', () => {
+    const selected = component.vm.selected();
+    component.pane.set('outline');
+    fixture.detectChanges();
+    const search: HTMLInputElement = fixture.nativeElement.querySelector('ngx-question-outline input');
+    search.dispatchEvent(new Event('select', { bubbles: true }));
+    fixture.detectChanges();
+    expect(component.pane()).toBe('outline');
+    expect(component.vm.selected()).toBe(selected);
+    expect(fixture.nativeElement.querySelector('textarea[formControlName="question"]').value).toBe('Prompt 1');
+  });
+  it('opens the selected editor from the responsive outline without losing a draft', () => {
+    const first = component.vm.questions()[0];
+    first.controls.question.setValue('Retained draft');
+    first.markAsDirty();
+    component.pane.set('outline');
+    fixture.detectChanges();
+    fixture.nativeElement.querySelectorAll('.question-outline__question-link')[1].click();
+    fixture.detectChanges();
+    expect(component.pane()).toBe('editor');
+    expect(component.vm.selected()).toBe(component.vm.questions()[1]);
+    expect(first.controls.question.value).toBe('Retained draft');
+    expect(component.form().dirty).toBeTrue();
+  });
+  it('reveals incomplete and newly added questions while the outline is selected', () => {
+    const invalid = component.vm.questions()[39];
+    invalid.controls.answer.setValue('Missing choice');
+    component.pane.set('outline');
+    component.vm.firstIncomplete();
+    fixture.detectChanges();
+    expect(component.pane()).toBe('editor');
+    expect(component.vm.selected()).toBe(invalid);
+    expect(invalid.touched).toBeTrue();
+    component.pane.set('outline');
+    component.vm.add();
+    fixture.detectChanges();
+    expect(component.pane()).toBe('editor');
+    expect(component.vm.selectedIndex()).toBe(50);
+    expect(component.vm.selected()?.controls.question.value).toBe('');
+  });
   it('renders one editor and a bounded outline for 50 questions', () => {
     expect(
       fixture.nativeElement.querySelectorAll('textarea[formControlName="question"]').length

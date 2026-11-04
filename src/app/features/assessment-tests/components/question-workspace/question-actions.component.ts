@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 @Component({
   selector: 'ngx-question-actions',
-  imports: [
+  imports: [NgxButton,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -71,12 +72,12 @@ import { MatInputModule } from '@angular/material/input';
             (input)="targetChange.emit(+$any($event.target).value)"
           /><mat-hint>1–{{ count() }}</mat-hint></mat-form-field
         ><button
-          mat-flat-button
+          mat-flat-button ngxButton surface="outline"
           [disabled]="!validMove()"
           (click)="moveTo.emit()"
         >
           Move</button
-        ><button mat-button (click)="cancelMove.emit()">
+        ><button mat-button ngxButton surface="glass" (click)="cancelMove.emit()">
           Cancel
         </button>
       </div>
@@ -85,8 +86,8 @@ import { MatInputModule } from '@angular/material/input';
   styles: [
     `
       :host {
-        --line: var(--mat-sys-outline-variant);
-        --muted: var(--mat-sys-on-surface-variant);
+        --line: var(--ngx-color-border);
+        --muted: var(--ngx-color-muted);
         display: contents;
         min-width: 0;
       }
@@ -104,7 +105,7 @@ import { MatInputModule } from '@angular/material/input';
         gap: 0;
       }
       button:focus-visible {
-        outline: 2px solid var(--mat-sys-primary);
+        outline: 2px solid var(--ngx-color-primary);
         outline-offset: 2px;
       }
       .question-actions__move-controls {

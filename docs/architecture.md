@@ -68,7 +68,7 @@ movement and one-level removal undo preserve identity and answer associations.
 
 ## Shell and compatibility
 
-`app.ts` remains the federation route shell with header/catalog navigation.
+`app.ts` remains the federation route shell with shared action-bar/catalog navigation.
 `bootstrap.ts` keeps its RouterOutlet-only standalone root. Default `App`, exported
 `Routes`, `remoteEntry.js`, exposures and shared dependency versions are preserved.
 The empty child route is the catalog; `tests/new` and `tests/:id` mount the guarded
@@ -119,3 +119,9 @@ owners deploy the service, publish/adopt the reviewed contract and release both
 consumers together before enabling new subjects. Verify real Admin creation,
 section load/error states and learner start/resume/history through hosted gateways.
 No publication, deployment or production data changes were performed here.
+
+## Design system — 2026-11-03
+
+Catalogue and all three wizard steps use the installed Ngx Workshop design system. The app owns a compact action bar; catalogue filters/results and question outline/editor use bounded panels. `components/assessment-panel.component.ts` composes public NgxPanel inputs/projection with an accessible scrolling region; `assessment-viewport.directive.ts` and the local viewport helper measure actual remaining screen height and clean up observers. Wizard controls retain visible navigation/actions outside content scrolling. Mobile switches panels while retaining form identities, selection and validation targeting. Selected question headings focus after rendering.
+
+Material fields remain typed reactive controls; buttons/status/theme tokens and overlay classes match the shared system. Compact mobile panel rules target Material elements under the local wrapper. Question outline emits `questionSelect`, avoiding collisions with native search text-selection events. MVVM/data ownership, routes, guard, payloads and definition lifecycle are unchanged.

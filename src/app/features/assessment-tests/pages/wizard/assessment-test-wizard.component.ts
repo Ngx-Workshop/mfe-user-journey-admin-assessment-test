@@ -1,3 +1,5 @@
+import { AssessmentViewportDirective } from '../../components/assessment-viewport.directive';
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,7 +37,7 @@ import { AssessmentEditorStore } from '../../state/assessment-editor.store';
 
 @Component({
   selector: 'ngx-assessment-test-wizard',
-  imports: [
+  imports: [NgxButton, AssessmentViewportDirective,
     AssessmentWizardHeadingComponent,
     AssessmentWizardControlsComponent,
     QuestionWorkspaceComponent,
@@ -46,7 +48,7 @@ import { AssessmentEditorStore } from '../../state/assessment-editor.store';
     MatSnackBarModule,
   ],
   template: `
-    <section class="assessment-wizard__page">
+    <section class="assessment-wizard__page" ngxAssessmentViewport>
       <ngx-assessment-wizard-heading
         [name]="form.controls.name.value"
         [dirty]="form.dirty"
@@ -58,7 +60,7 @@ import { AssessmentEditorStore } from '../../state/assessment-editor.store';
         <div class="assessment-wizard__error" role="alert">
           {{ error() }}
           @if (loadFailed()) {
-            <button mat-stroked-button (click)="retry()">
+            <button mat-stroked-button ngxButton surface="outline" (click)="retry()">
               Retry loading
             </button>
           }
@@ -120,28 +122,28 @@ import { AssessmentEditorStore } from '../../state/assessment-editor.store';
   `,
   styles: [
     `
-      :host {
-        display: block;
-        min-width: 0;
-      }
+      :host { display: block; min-width: 0; }
       .assessment-wizard__page {
-        display: grid;
-        gap: 1.5rem;
-        padding: 1rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-height: 0;
       }
       .assessment-wizard__editor {
         border: 0;
         padding: 0;
         margin: 0;
         min-width: 0;
-        display: grid;
-        gap: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
       }
       .assessment-wizard__error {
-        color: var(--mat-sys-error);
+        color: var(--ngx-color-error);
         border-left: 3px solid currentColor;
         padding: 1rem;
-        background: var(--mat-sys-error-container);
+        background: var(--ngx-color-surface);
       }
     `,
   ],
@@ -167,9 +169,7 @@ export class AssessmentTestWizardComponent {
   readonly error = this.store.error;
   readonly loadFailed = this.store.loadFailed;
   readonly mode = this.store.mode;
-  get form() {
-    return this.vm.form;
-  }
+      get form() { return this.vm.form; }
 
   constructor() {
     this.reloadSubjects();
@@ -208,10 +208,7 @@ export class AssessmentTestWizardComponent {
 
   @HostListener('window:beforeunload', ['$event'])
   beforeUnload(event: BeforeUnloadEvent) {
-    if (this.form.dirty || this.saving()) {
-      event.preventDefault();
-      event.returnValue = '';
-    }
+      if (this.form.dirty || this.saving()) { event.preventDefault(); event.returnValue = ''; }
   }
   canLeave() {
     return (
@@ -220,20 +217,13 @@ export class AssessmentTestWizardComponent {
         confirm('Discard your unsaved assessment changes?'))
     );
   }
-  retry() {
-    const id = this.store.testId();
-    if (id && !this.saving()) this.retryLoad.next(id);
-  }
+      retry() { const id = this.store.testId(); if (id && !this.saving()) this.retryLoad.next(id); }
   goBack() {
     this.router.navigate(['.'], { relativeTo: this.route.parent });
   }
   submit() {
     if (this.saving() || this.loading() || this.loadFailed()) return;
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.vm.setStep(2);
-      return;
-    }
+      if (this.form.invalid) { this.form.markAllAsTouched(); this.vm.setStep(2); return; }
     this.store
       .save$(this.forms.toPayload(this.form))
       .pipe(takeUntilDestroyed(this.destroyRef))

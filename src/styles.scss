@@ -1,0 +1,10 @@
+@use '@tmdjr/ngx-workshop-design-system/theme' as ngx;
+@use '@angular/material' as mat;
+@include ngx.theme();
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--ngx-color-canvas); color: var(--ngx-color-text); font: var(--ngx-font-body); }
+// Standalone root; hosted routes inherit the shell's toolbar offset.
+body > ngx-seed-mfe { --assessment-toolbar-top: 0px; }
+
+.assessment-shell { @include mat.form-field-density(-3); }

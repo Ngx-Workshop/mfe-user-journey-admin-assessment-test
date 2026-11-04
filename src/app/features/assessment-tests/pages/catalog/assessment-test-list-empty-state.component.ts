@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'ngx-assessment-test-list-empty-state',
-  imports: [MatButtonModule, MatIconModule],
+  imports: [NgxButton,MatButtonModule, MatIconModule],
   template: `
     <div class="assessment-empty__empty">
       <mat-icon>inbox</mat-icon>
@@ -17,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
         Create a test with questions, answer choices and helpful
         feedback.
       </p>
-      <button mat-flat-button color="primary" (click)="create.emit()">
+      <button mat-flat-button ngxButton surface="outline" color="primary" (click)="create.emit()">
         <mat-icon>add</mat-icon>
         Create your first assessment
       </button>
@@ -31,7 +32,7 @@ import { MatIconModule } from '@angular/material/icon';
         justify-items: center;
         padding: 2rem 0;
         text-align: center;
-        border: 1px dashed var(--mat-sys-outline-variant);
+        border: 1px dashed var(--ngx-color-border);
         border-radius: 16px;
       }
       h3,
@@ -39,7 +40,7 @@ import { MatIconModule } from '@angular/material/icon';
         margin: 0;
       }
       p {
-        color: var(--mat-sys-on-surface-variant);
+        color: var(--ngx-color-muted);
       }
       .assessment-empty__empty > mat-icon {
         font-size: 48px;

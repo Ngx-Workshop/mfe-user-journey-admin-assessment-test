@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,7 +15,7 @@ import { Question } from './question-workspace.view-model';
 
 @Component({
   selector: 'ngx-question-fields',
-  imports: [
+  imports: [NgxButton,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -32,7 +33,7 @@ import { Question } from './question-workspace.view-model';
         <textarea
           matInput
           formControlName="question"
-          rows="3"
+          rows="2"
           required
         ></textarea>
         @if (question().controls.question.hasError('maxlength')) {
@@ -46,7 +47,7 @@ import { Question } from './question-workspace.view-model';
       <div formArrayName="choices" class="question-fields__choices">
         <div class="question-fields__choices-head">
           <h4>Choices</h4>
-          <button mat-button (click)="addChoice.emit()">
+          <button mat-button ngxButton surface="glass" (click)="addChoice.emit()">
             <mat-icon>add</mat-icon>
             Add choice
           </button>
@@ -100,7 +101,7 @@ import { Question } from './question-workspace.view-model';
           class="question-fields__full"
         >
           <mat-label>Correct Answer</mat-label>
-          <mat-select formControlName="answer" required>
+          <mat-select panelClass="ngx-design-system-overlay ngx-select-panel" formControlName="answer" required>
             @for (
               opt of question().controls.choices.controls;
               track $index;
@@ -153,14 +154,17 @@ import { Question } from './question-workspace.view-model';
   styles: [
     `
       :host {
-        --line: var(--mat-sys-outline-variant);
-        --muted: var(--mat-sys-on-surface-variant);
+        --line: var(--ngx-color-border);
+        --muted: var(--ngx-color-muted);
         display: block;
         min-width: 0;
       }
       p {
         margin: 0;
       }
+      .question-fields__choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; }
+      .question-fields__choices-head { grid-column: 1 / -1; }
+      @media (max-width: 600px) { .question-fields__choices { grid-template-columns: minmax(0, 1fr); } }
       .question-fields__choices-head {
         display: flex;
         align-items: center;
@@ -188,12 +192,12 @@ import { Question } from './question-workspace.view-model';
         padding-top: 1rem;
       }
       .question-fields__error {
-        color: var(--mat-sys-error);
+        color: var(--ngx-color-error);
         font-size: 0.85rem;
         margin: 0 0 0.5rem;
       }
       button:focus-visible {
-        outline: 2px solid var(--mat-sys-primary);
+        outline: 2px solid var(--ngx-color-primary);
         outline-offset: 2px;
       }
     `,

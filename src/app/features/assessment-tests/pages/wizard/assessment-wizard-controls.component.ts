@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,13 +9,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'ngx-assessment-wizard-controls',
-  imports: [MatButtonModule, MatIconModule],
+  imports: [NgxButton,MatButtonModule, MatIconModule],
   template: ` <nav
       class="assessment-wizard-controls__steps"
       aria-label="Assessment steps"
     >
       <button
-        mat-stroked-button
+        mat-stroked-button ngxButton surface="outline"
         class="assessment-wizard-controls__step"
         [class.assessment-wizard-controls__step--active]="
           step() === 0
@@ -26,7 +27,7 @@ import { MatIconModule } from '@angular/material/icon';
         Basics
       </button>
       <button
-        mat-stroked-button
+        mat-stroked-button ngxButton surface="outline"
         class="assessment-wizard-controls__step"
         [class.assessment-wizard-controls__step--active]="
           step() === 1
@@ -38,7 +39,7 @@ import { MatIconModule } from '@angular/material/icon';
         Questions
       </button>
       <button
-        mat-stroked-button
+        mat-stroked-button ngxButton surface="outline"
         class="assessment-wizard-controls__step"
         [class.assessment-wizard-controls__step--active]="
           step() === 2
@@ -50,11 +51,11 @@ import { MatIconModule } from '@angular/material/icon';
         Review
       </button>
     </nav>
-    <ng-content />
+    <div class="assessment-wizard-controls__body"><ng-content /></div>
     <footer class="assessment-wizard-controls__footer">
       <div class="assessment-wizard-controls__footer-left">
         <button
-          mat-stroked-button
+          mat-stroked-button ngxButton surface="outline"
           (click)="previous.emit()"
           [disabled]="step() === 0"
         >
@@ -64,7 +65,7 @@ import { MatIconModule } from '@angular/material/icon';
       <div class="assessment-wizard-controls__footer-right">
         @if (step() < 2) {
           <button
-            mat-flat-button
+            mat-flat-button ngxButton surface="outline"
             color="primary"
             (click)="next.emit()"
           >
@@ -73,7 +74,7 @@ import { MatIconModule } from '@angular/material/icon';
           </button>
         } @else {
           <button
-            mat-flat-button
+            mat-flat-button ngxButton surface="outline"
             color="primary"
             [disabled]="invalid() || saving()"
             (click)="save.emit()"
@@ -93,27 +94,31 @@ import { MatIconModule } from '@angular/material/icon';
     `
       :host {
         display: grid;
-        gap: 1.5rem;
+        gap: 0.5rem;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        flex: 1;
+        min-height: 0;
         min-width: 0;
       }
+      .assessment-wizard-controls__body { min-height: 0; overflow: auto; scrollbar-width: thin; }
       .assessment-wizard-controls__steps {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.5rem;
-        background: var(--mat-sys-surface-container-low);
+        background: var(--ngx-color-surface);
         padding: 0.5rem;
-        border-radius: 14px;
+        border-radius: var(--ngx-radius-sm);
       }
       .assessment-wizard-controls__steps button {
         border-color: transparent;
         border-radius: 10px;
-        height: 48px;
-        color: var(--mat-sys-on-surface-variant);
+        height: 40px;
+        color: var(--ngx-color-muted);
       }
       .assessment-wizard-controls__steps
         button.assessment-wizard-controls__step--active {
-        color: var(--mat-sys-on-secondary-container);
-        background: var(--mat-sys-secondary-container);
+        color: var(--ngx-color-text);
+        background: var(--ngx-color-surface-high);
       }
       .assessment-wizard-controls__step-num {
         display: inline-grid;
@@ -127,17 +132,22 @@ import { MatIconModule } from '@angular/material/icon';
       }
       .assessment-wizard-controls__footer {
         flex-wrap: wrap;
-        position: sticky;
+        position: relative;
         bottom: 0;
         z-index: 3;
         display: flex;
         justify-content: space-between;
         gap: 1rem;
-        padding: 1rem;
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 14px;
-        background: var(--mat-sys-surface-container);
-        box-shadow: 0 -4px 20px #00000012;
+        padding: 0.5rem;
+        border: 1px solid var(--ngx-color-border);
+        border-radius: var(--ngx-radius-sm);
+        background: var(--ngx-color-surface);
+        box-shadow: none;
+      }
+      @media (max-height: 650px) and (max-width: 1000px) {
+        .assessment-wizard-controls__steps { padding: 0; }
+        .assessment-wizard-controls__steps button { min-height: 32px; height: 32px; }
+        .assessment-wizard-controls__footer button { min-height: 40px; height: 40px; font-size: 0.7rem; padding-inline: 8px; }
       }
       @media (max-width: 480px) {
         .assessment-wizard-controls__steps {
@@ -154,7 +164,7 @@ import { MatIconModule } from '@angular/material/icon';
           margin-right: 0.2rem;
         }
         .assessment-wizard-controls__footer {
-          padding: 0.75rem 0.5rem;
+          padding: 0.25rem;
           gap: 0.5rem;
         }
       }

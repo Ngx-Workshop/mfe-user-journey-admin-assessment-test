@@ -1,3 +1,7 @@
+import { signal } from '@angular/core';
+import { AssessmentPanelComponent } from '../../components/assessment-panel.component';
+import { AssessmentViewportDirective } from '../../components/assessment-viewport.directive';
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,7 +20,7 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
 
 @Component({
   selector: 'ngx-assessment-catalog-view',
-  imports: [
+  imports: [NgxButton, AssessmentPanelComponent, AssessmentViewportDirective,
     MatButtonModule,
     MatIconModule,
     MatPaginatorModule,
@@ -27,10 +31,15 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
   ],
   template: `
     <section
-      class="assessment-catalog__layout"
+      class="assessment-catalog__layout" ngxAssessmentViewport
       aria-label="Assessment catalog"
       [attr.aria-busy]="vm().loading()"
     >
+      <div class="assessment-catalog__switch" role="group" aria-label="Catalogue panels">
+        <button mat-button [attr.aria-pressed]="pane() === 'filters'" (click)="pane.set('filters')">Filters</button>
+        <button mat-button [attr.aria-pressed]="pane() === 'results'" (click)="pane.set('results')">Assessments</button>
+      </div>
+      <ngx-assessment-panel heading="Filter console" eyebrow="ASSESSMENTS / FILTER" shape="chamfered" [class.assessment-catalog__hidden]="pane() !== 'filters'">
       <ngx-assessment-test-list-filters
         [query]="vm().query()"
         [subjects]="vm().subjects()"
@@ -43,7 +52,10 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
         (levelCapChange)="levelChange.emit($event)"
         (sortChange)="sortChange.emit($event)"
       />
-      <div class="assessment-catalog__results-toolbar">
+      <button mat-button ngxButton surface="glass" (click)="clear.emit()">Clear filters</button>
+      </ngx-assessment-panel>
+      <ngx-assessment-panel heading="Assessments" eyebrow="ASSESSMENTS / CATALOGUE" background="grid" [resetKey]="vm().pagedTests()" [class.assessment-catalog__hidden]="pane() !== 'results'">
+      <div class="assessment-catalog__results-toolbar" assessmentPanelHeader>
         <p role="status">
           {{ vm().filtered().length }}
           {{
@@ -57,12 +69,12 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
         </p>
         <div>
           @if (vm().hasFilters()) {
-            <button mat-button (click)="clear.emit()">
+            <button mat-button ngxButton surface="glass" (click)="clear.emit()">
               Clear filters
             </button>
           }
           <button
-            mat-button
+            mat-button ngxButton surface="glass"
             (click)="refresh.emit()"
             [disabled]="vm().loading()"
           >
@@ -86,7 +98,7 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
             <strong>We couldn't complete that request</strong>
             <p>{{ vm().error() }}</p>
             <button
-              mat-stroked-button
+              mat-stroked-button ngxButton surface="outline"
               (click)="refresh.emit()"
               [disabled]="vm().loading()"
             >
@@ -131,7 +143,7 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
               Try another search or clear your subject and level
               filters.
             </p>
-            <button mat-stroked-button (click)="clear.emit()">
+            <button mat-stroked-button ngxButton surface="outline" (click)="clear.emit()">
               Clear filters
             </button>
           </div>
@@ -145,16 +157,20 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
         <mat-icon>info_outline</mat-icon>Assessments with learner
         attempts cannot be changed or deleted.
       </p>
+      </ngx-assessment-panel>
     </section>
   `,
   styles: [
     `
-      :host {
-        display: block;
-      }
-      .assessment-catalog__layout {
-        display: grid;
-        gap: 16px;
+      :host { display: block; }
+      .assessment-catalog__layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 1rem; min-height: 0; }
+      .assessment-catalog__switch { display: none; }
+      @media (max-width: 1000px) {
+        .assessment-catalog__layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 0.5rem; }
+        .assessment-catalog__switch { display: flex; }
+        .assessment-catalog__switch button[aria-pressed='true'] { background: var(--ngx-color-surface-high); }
+        ngx-assessment-panel { grid-row: 2; grid-column: 1; }
+        .assessment-catalog__hidden { display: none; }
       }
       .assessment-catalog__results-toolbar {
         display: flex;
@@ -163,43 +179,28 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
         gap: 8px;
         flex-wrap: wrap;
       }
-      .assessment-catalog__results-toolbar p {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-      }
-      .assessment-catalog__results-toolbar span {
-        color: var(--mat-sys-on-surface-variant);
-        font-weight: 400;
-      }
+      .assessment-catalog__results-toolbar p { margin: 0; font-size: 14px; font-weight: 600; }
+      .assessment-catalog__results-toolbar span { color: var(--ngx-color-muted); font-weight: 400; }
       .assessment-catalog__empty {
         text-align: center;
-        padding: 48px 16px;
-        border: 1px dashed var(--mat-sys-outline-variant);
-        border-radius: 16px;
+        padding: 24px 12px;
+        border: 1px dashed var(--ngx-color-border);
+        border-radius: var(--ngx-radius-sm);
       }
-      .assessment-catalog__empty h3 {
-        margin: 12px 0;
-      }
+      .assessment-catalog__empty h3 { margin: 12px 0; }
       .assessment-catalog__empty p,
-      .assessment-catalog__policy {
-        color: var(--mat-sys-on-surface-variant);
-      }
+      .assessment-catalog__policy { color: var(--ngx-color-muted); }
       .assessment-catalog__message {
         display: flex;
         align-items: flex-start;
         gap: 12px;
         padding: 20px;
         border-radius: 12px;
-        background: var(--mat-sys-error-container);
-        color: var(--mat-sys-on-error-container);
+        background: var(--ngx-color-surface);
+        color: var(--ngx-color-error);
       }
-      .assessment-catalog__message mat-icon {
-        flex-shrink: 0;
-      }
-      .assessment-catalog__message p {
-        overflow-wrap: anywhere;
-      }
+      .assessment-catalog__message mat-icon { flex-shrink: 0; }
+      .assessment-catalog__message p { overflow-wrap: anywhere; }
       .assessment-catalog__policy {
         display: flex;
         align-items: flex-start;
@@ -208,23 +209,17 @@ import { AssessmentTestListFiltersComponent } from './assessment-test-list-filte
         line-height: 20px;
         margin: 8px 0;
       }
-      .assessment-catalog__policy mat-icon {
-        font-size: 18px;
-        flex-shrink: 0;
-      }
-      mat-paginator {
-        border-radius: 12px;
-      }
+      .assessment-catalog__policy mat-icon { font-size: 18px; flex-shrink: 0; }
+      mat-paginator { border-radius: 12px; }
       @media (max-width: 600px) {
-        .assessment-catalog__results-toolbar {
-          gap: 4px;
-        }
+      .assessment-catalog__results-toolbar { gap: 4px; }
       }
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssessmentCatalogViewComponent {
+  readonly pane = signal<'filters' | 'results'>('results');
   readonly vm = input.required<AssessmentCatalogViewModel>();
   readonly queryChange = output<string>();
   readonly subjectChange = output<
