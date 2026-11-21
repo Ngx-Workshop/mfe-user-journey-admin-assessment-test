@@ -22,4 +22,4 @@ completed feature records when actual implementation work begins.
 
 - [006 Design system](006-design-system/spec.md) — Complete; desktop/mobile hosted UI verified. [Handoff](006-design-system/handoff.md).
 
-- [007-static-deployment-cleanup](007-static-deployment-cleanup/spec.md): Static deployment cleanup; helper verified, Actions rollout pending.
+- [007-static-deployment-cleanup](007-static-deployment-cleanup/spec.md): Static deployment cleanup; helper tests, Actions rollout and live Nginx entrypoints verified.
